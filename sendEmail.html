@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body style="padding: 0 1em">
+    
+    <div style="padding: 0.5em 0">
+    <b>Recipients</b>
+    </div>
+    
+    <div stlye="padding: 0.5em 0 0 0">
+    <input type="checkbox" id="checkCast" name="checkRecip">
+    <label for="checkCast">Cast</label>
+    </div>
+    
+    <div style="padding: 0 0 0.5em 0">
+    <input type="checkbox" id="checkCrew" name="checkRecip">
+    <label for="crewCast">Crew</label>
+    </div>
+    
+    <div style="padding: 0.5em 0">
+    <b>Email Subject</b>
+    </div>
+    
+    <div style="padding: 0.5em 0">
+    <input type="text" id="subject" style="width: 150px">
+    <div>
+    
+    <div style="padding: 1em 0 0.5em 0">
+    <b>Email Body</b>
+    </div>
+    
+    <div style="padding: 0.5em 0">
+    <textarea type="textarea" id="emailBody" style="width: 275px" rows="25"></textarea>
+    </div>
+    
+    <div style="padding: 1em 0">
+    <button id="sendEmail" class="action" onclick="sendEmail()">Send Email</button>
+    <button id="closeSidebar" onclick="google.script.host.close()">Close</button>
+    </div>
+    
+    <script>
+    
+    function emailOnSuccess() {
+      window.alert("Email sent.");
+      google.script.host.close();
+    }
+    
+    function sendEmail() {
+    
+      var checkboxCast = document.getElementById("checkCast");
+      var checkboxCrew = document.getElementById("checkCrew");
+      var subj = document.getElementById("subject").value;
+      var msg = document.getElementById("emailBody").value;
+      
+      if (checkboxCast.checked && checkboxCrew.checked) {
+        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Cast Info", subj, msg);
+        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Crew Info", subj, msg);
+      } else if (checkboxCast.checked) {
+        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Cast Info", subj, msg);
+      } else if (checkboxCrew.checked) {
+        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Crew Info", subj, msg);
+      } else {
+        window.alert("No recipients were selected.");
+      }
+      
+    }
+    
+    </script>
+    
+  </body>
+</html>
