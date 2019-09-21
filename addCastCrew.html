@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body onload="loadFunction()">
+  
+  <div style="padding: 0.5em 1em">
+  <b>Are you adding students to cast or crew?</b>
+  </div>
+  
+  <div style="padding: 0.5em 1em 0 1em">
+  <input type="radio" name="castOrCrew" id="radioCast" onclick="changeToRole(document.getElementsByName('roleOrPos'))">
+  <label for="radioCast">Cast</label>
+  </div>
+  
+  <div style="padding: 0 1em 0.5em 1em">
+  <input type="radio" name="castOrCrew" id="radioCrew" onclick="changeToPos(document.getElementsByName('roleOrPos'))">
+  <label for="radioCrew">Crew</label>
+  </div>
+  
+  <div class="inline form-group" style="padding: 0.5em 1em">
+  <label for="rolePos" name="roleOrPos"><b>Role or Position</b></label>
+  <select id="rolePos" style="width: 150px"></select>
+  </div>
+  
+  <div class="inline form-group" style="padding: 0.5em 0 1em 0">
+  <label for="numOfStu"><b>Number of Students</b></label>
+  <input type="text" id="numOfStu" style="width: 50px" oninput="genStudents()">
+  </div>
+  
+  <div>
+  <p style="padding: 0 1em">
+  <b>Add Students</b><br>By the way, you can start typing a name when you select a dropdown menu to search through the registered student names. You can also choose "Not Registered"
+  and type in the name of a student who has not yet registered.
+  </p>
+  </div>
+  
+  <div id="studentInputBox" style="padding: 0 1em 0.5em 1em">
+  </div>
+  
+  <div style="padding: 1em 1em">
+  <button id="addStudents" class="action" onclick="addStudents()">Add Students</button>
+  <button id="closeSidebar" onclick="google.script.host.close()">Close</button>
+  </div>
+  
+  <script>
+  
+  function loadOnSuccess(list) {
+  
+    var nmLstElement = document.createElement("p");
+    nmLstElement.setAttribute("id", "listOfStuNames");
+    nmLstElement.value = list[0];
+    nmLstElement.style.display = "none";
+    document.body.appendChild(nmLstElement);
+    
+    var roleLstElement = document.createElement("p");
+    roleLstElement.setAttribute("id", "roleList");
+    roleLstElement.value = list[1];
+    roleLstElement.style.display = "none";
+    document.body.appendChild(roleLstElement);
+    
+    var posLstElement = document.createElement("p");
+    posLstElement.setAttribute("id", "posList");
+    posLstElement.value = list[2];
+    posLstElement.style.display = "none";
+    document.body.appendChild(posLstElement);
+    
+    //console.log(nmLstElement.value);
+    console.log(roleLstElement.value);
+    console.log(posLstElement.value);
+  }
+  
+  function loadFunction() {
+    google.script.run.withSuccessHandler(loadOnSuccess).compileLists();
+  }
+  
+  function changeToRole(rolPos) {
+  
+    rolPos[0].innerHTML = "<b>Role</b>";
+    var list = Array.from(document.getElementById("roleList").value);
+    var rolePosDrop = document.getElementById("rolePos");
+    
+    rolePosDrop.options.length = 0;
+    
+    for (var i=0; i<list.length; i++) {
+      var curOption = document.createElement("option");
+      curOption.text = list[i];
+      rolePosDrop.add(curOption);
+    }
+    
+  }
+  
+  function changeToPos(rolPos) {
+  
+    rolPos[0].innerHTML = "<b>Position</b>";
+    var list = Array.from(document.getElementById("posList").value);
+    var rolePosDrop = document.getElementById("rolePos");
+    
+    rolePosDrop.options.length = 0;
+    
+    for (var i=0; i<list.length; i++) {
+      var curOption = document.createElement("option");
+      curOption.text = list[i];
+      rolePosDrop.add(curOption);
+    }
+    
+  }
+  
+  function genStudents() {
+    
+    var numOfStudents = parseInt(document.getElementById("numOfStu").value);
+    
+    if (!(Number.isInteger(numOfStudents))) {
+      numOfStudents = 0;
+    }
+    
+    var curLabel;
+    var curInput;
+    var curSelect;
+    var curOption;
+    var curOther;
+    var curDiv;
+    
+    var stuInptBx = document.getElementById("studentInputBox");
+    var nameList = Array.from(document.getElementById("listOfStuNames").value);
+    
+    var studentInputList = Array.from(document.getElementsByName("stuNames"));
+    
+    if (studentInputList.length > 0) {
+      for (var i=0; i < studentInputList.length; i++) {
+        stuInptBx.removeChild(studentInputList[i]);
+      }
+    }
+  
+    for (var i=0; i<numOfStudents; i++) {
+      
+      curInput = document.createElement("div");
+      curInput.classList += "block form-group";
+      curInput.setAttribute("name", "stuNames");
+      curInput.setAttribute("id", "studentDiv" + i.toString());
+      
+      curSelect = document.createElement("SELECT");
+      curSelect.setAttribute("name", "dropdown");
+      curSelect.setAttribute("id", "stuNameSelect" + i.toString());
+      curSelect.setAttribute("onchange", "otherOptionCreate(this)");
+      curSelect.setAttribute("style", "width: 150px");
+      
+      for (var k=0; k<nameList.length; k++) {
+        curOption = document.createElement("option");
+        curOption.text = nameList[k];
+        curSelect.add(curOption);
+      }
+      
+      curOption = document.createElement("option");
+      curOption.text = "Not Registered";
+      curSelect.add(curOption);
+      
+      curOther = document.createElement("input");
+      curOther.setAttribute("id", "other" + i.toString());
+      curOther.setAttribute("name", "otherStudents");
+      curOther.setAttribute("type", "text");
+      curOther.setAttribute("style", "width: 150px");
+      curOther.style.display = "none";
+      
+      curLabel = document.createElement("LABEL");
+      curLabel.setAttribute("from", "stuNameSelect" + i.toString());
+      curLabel.innerHTML = "Student " + (i+1).toString();
+      
+      curInput.appendChild(curLabel);
+      curInput.appendChild(curSelect);
+      curInput.appendChild(curOther);
+      
+      stuInptBx.appendChild(curInput);
+      
+    }
+  
+  }
+  
+  function otherOptionCreate(curSelect) {
+    
+    var stuNum = curSelect.id.slice(13, curSelect.id.length);
+    console.log(stuNum);
+    
+    if (curSelect.options[curSelect.selectedIndex].value == "Not Registered") {
+      console.log("Other Option Selected");
+      document.getElementById("other" + stuNum).style.display = "block";
+    } else {
+      document.getElementById("other" + stuNum).style.display = "none";
+    }
+    
+  }
+  
+  function addStudentsOnSuccess() {
+    //window.alert("Students have been added.");
+    google.script.run.createCastCrewSidebar();
+  }
+  
+  function addStudentsOnFailure() {
+    window.alert("There was an ERROR! Please try again.");
+  }
+  
+  function addStudents() {
+    
+    var castOrCrewSheet;
+    var curDropdown;
+    var curName;
+    var curOtherStu;
+    var names =[];
+    
+    var castRadio = document.getElementById("radioCast").checked;
+    var crewRadio = document.getElementById("radioCrew").checked;
+    var roleOrPosElmnt = document.getElementById("rolePos");
+    var roleOrPosSelected =roleOrPosElmnt.options[roleOrPosElmnt.selectedIndex].value;
+    var numOfStudents = parseInt(document.getElementById("numOfStu").value);
+    var dropdowns = Array.from(document.getElementsByName("dropdown"));
+    var others = Array.from(document.getElementsByName("otherStudents"));
+    
+    try {
+      
+      if (castRadio) {
+        castOrCrewSheet = "Cast List";
+      } else if (crewRadio) {
+        castOrCrewSheet = "Crew List";
+      } else {
+        throw "error";
+      }
+      
+      var test = 1 + numOfStudents;
+      
+      for (var i=0; i<dropdowns.length; i++) {
+        curDropdown = dropdowns[i];
+        curName = curDropdown.options[curDropdown.selectedIndex].value;
+        if (curName != "Not Registered") {
+          names.push(curName);
+        }
+        curOtherStu = others[i];
+        if (curOtherStu.style.display != "none") {
+          names.push(curOtherStu.value);
+        }
+      }
+      
+      google.script.run.withSuccessHandler(addStudentsOnSuccess).withFailureHandler(addStudentsOnFailure).addCastCrew(castOrCrewSheet, roleOrPosSelected, numOfStudents, names);
+      
+    }
+    
+    catch(error) {
+      addStudentsOnFailure();
+    }
+  
+  }
+  
+  </script>
+    
+  </body>
+</html>
