@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body onload="loadFunction()">
+    
+    <div style="padding: 0.5em 1em">
+    <b>Are you adding students to cast or crew?</b>
+    </div>
+  
+    <div style="padding: 0.5em 1em 0 1em">
+    <input type="radio" name="castOrCrew" id="radioCast" onclick="changeToRole(document.getElementsByName('numOfRolePosLabel'))">
+    <label for="radioCast">Cast</label>
+    </div>
+  
+    <div style="padding: 0 1em 0.5em 1em">
+    <input type="radio" name="castOrCrew" id="radioCrew" onclick="changeToPos(document.getElementsByName('numOfRolePosLabel'))">
+    <label for="radioCrew">Crew</label>
+    </div>
+    
+    <div class="inline form-group" style="padding: 0.5em 1em">
+    <label for="numOfRolePos" name="numOfRolePosLabel">Number of Roles or Positions</label>
+    <input type="text" id="numOfRolePos" style="width: 50px" oninput="createBoxes()">
+    </div>
+    
+    <div id="rolePosBox" style="padding: 0.5em 1em"></div>
+    
+    <div style="padding: 1em 1em 0 1em">
+    <button id="createShow" onclick="addRolesPositions()" class="action">Add Roles or Positions</button>
+    <button id="closeSidebar" onclick="google.script.host.close()">Close</button>
+    </div>
+    
+  <script>
+  
+  function loadOnSuccess(thespDenomsList) {
+    
+      var thespDenomsElmnt = document.createElement("p");
+      thespDenomsElmnt.setAttribute("id", "thespDenoms");
+      thespDenomsElmnt.value = thespDenomsList;
+      thespDenomsElmnt.style.display = "none";
+      document.body.appendChild(thespDenomsElmnt);
+      //console.log(document.getElementById("thespDenoms").value);
+      
+    }
+  
+    function loadFunction() {
+      google.script.run.withSuccessHandler(loadOnSuccess).compileThespianDenomList();
+    }
+    
+    function addRolePosSuccess() {
+      google.script.host.close();
+    }
+    
+    function changeToRole(rolPos) {
+      rolPos[0].innerHTML = "Number of Roles";
+      createBoxes();
+    }
+  
+    function changeToPos(rolPos) {
+      rolPos[0].innerHTML = "Number of Positions";
+      createBoxes();
+    }
+    
+    function buttonSelect() {
+      
+      var castButton = document.getElementById("radioCast");
+      var crewButton = document.getElementById("radioCrew");
+      var checkedButton = "none";
+      
+      if (castButton.checked) {
+        checkedButton = "role";
+      } else if (crewButton.checked) {
+        checkedButton = "position";
+      }
+      
+      return checkedButton;
+      
+    }
+    
+    function createBoxes() {
+    
+      var numOfBoxes = parseInt(document.getElementById("numOfRolePos").value);
+      var thespDenomsList = Array.from(document.getElementById("thespDenoms").value);
+      var curDenomsList = [];
+      var boxName = buttonSelect();
+    
+      if (!(Number.isInteger(numOfBoxes))) {
+          numOfBoxes = 0;
+      }
+      
+      if (boxName == "role") {
+        for (var i=0; i<thespDenomsList.length; i++) {
+          if (thespDenomsList[i].name == "Acting") {
+            curDenomsList.push(thespDenomsList[i]);
+          }
+        }
+      } else if (boxName == "position") {
+        for (var i=0; i<thespDenomsList.length; i++) {
+          if (thespDenomsList[i].name != "Acting") {
+            curDenomsList.push(thespDenomsList[i]);
+          }
+        }
+      } else {
+        numOfBoxes = 0;
+      }
+      
+      var boxList = Array.from(document.getElementsByName("rolePosDiv"));
+      
+      //console.log(boxList);
+      
+      if (boxList.length > 0) {     
+        for (var i=0; i<boxList.length; i++) {
+          document.getElementById("rolePosBox").removeChild(boxList[i]);
+        }
+      }
+      
+      for (var i = 0; i<numOfBoxes; i++) {
+        
+        var curBox = document.createElement("div");
+        curBox.classList += "block form-group";
+        curBox.setAttribute("name", "rolePosDiv");
+        curBox.setAttribute("id", "rolePosDiv"+i.toString());
+      
+        var curInput = document.createElement("input");
+        curInput.setAttribute("id", "rolePos"+i.toString());
+        curInput.setAttribute("name", "rolePos");
+        curInput.setAttribute("type", "text");
+        curInput.setAttribute("style", "width: 150px");
+        
+        var curLabel = document.createElement("label");
+        curLabel.setAttribute("from", "rolePosDiv"+i.toString());
+        curLabel.innerHTML = boxName.charAt(0).toUpperCase() + boxName.slice(1) + " " + (i+1).toString();
+        
+        var curSelect = document.createElement("select");
+        curSelect.setAttribute("name", "rolePosDrop");
+        curSelect.setAttribute("style", "width: 150px");
+        for (var k=0; k<curDenomsList.length; k++) {
+          for (var q=0; q<curDenomsList[k].denoms.length; q++) {
+            var curOption = document.createElement("option");
+            curOption.text = curDenomsList[k].denoms[q][0];
+            curSelect.add(curOption);
+          }  
+        }
+        
+        curBox.appendChild(curLabel);
+        //console.log("Label Added");
+        curBox.appendChild(curInput);
+        //console.log("Input Field Added");
+        curBox.appendChild(curSelect);
+        document.getElementById("rolePosBox").appendChild(curBox);
+        
+      }
+        
+    }
+    
+    function addRolesPositions() {
+
+      var numOfRolePos = parseInt(document.getElementById("numOfRolePos").value);
+      var roleDrop = Array.from(document.getElementsByName("rolePosDrop"));
+      
+      function getData(num, dropdown) {
+        var curList = [];
+        for (var i=0; i<num; i++) {
+          var curRolePos = document.getElementById("rolePos"+i.toString()).value;
+          var curSelect = dropdown[i];
+          var curOption = curSelect.options[curSelect.selectedIndex].value;
+          if (curRolePos.length == 0) {
+            curRolePos = curOption;
+          }
+          console.log([curRolePos, curOption]);
+          curList.push([curRolePos, curOption]);
+        }
+        return curList;
+      }
+      
+      var rolePosData = getData(numOfRolePos, roleDrop);
+      console.log(rolePosData);
+      
+      google.script.run.withSuccessHandler(addRolePosSuccess).addRolePos([buttonSelect(), rolePosData]);
+      
+    }
+  
+  </script>
+  
+  </body>
+</html>
