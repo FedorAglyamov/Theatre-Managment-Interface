@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body onload="loadFunction()">
+  
+    <div style="padding: 0.5em 1em"><p>
+    Using this program will format the current spreadsheet. It will create 6 seperate sheets:<br><br>
+    1. Cast Info<br>
+    2. Crew Info<br>
+    3. Cast List<br>
+    4. Crew List<br>
+    5. Cast Points<br>
+    6. Crew Points<br><br>
+    The cast and crew list can be used to manually add students to either cast or crew, while the info sheets will contain the personal information of each student. The points sheets
+    will contain each role/position and the corresponding Thespian point denomination. This corresponds to a certain number of points.<br><br>
+    ALL CURRENT DATA IN SPREADSHEET WILL BE DELETED
+    </p></div>
+    
+    <div style="padding: 0.5em 1em">
+    <b>Show Name</b>
+    </div>
+    
+    <div class="inline form-group" style="margin: 0.5em 1em">
+    <input type="text" id="showName" style="width: 200px;">
+    </div>
+    
+    <div style="padding: 0.5em 1em">
+    <b>Number of Shows</b>
+    </div>
+    
+    <div class="inline form-group" style="margin: 0.5em 1em">
+    <input type="text" id="numOfShows" style="width: 50px;">
+    </div>
+    
+    <div style="padding: 0.5em 1em">
+    <b>Role Setup</b>
+    </div>
+    
+    <div class="inline form-group" style="padding: 0.5em 1em">
+    <label for="numOfRoles"><b>Number of Roles</b><label>
+    <input type="text" id="numOfRoles" style="width: 50px" oninput="createBoxes('numOfRoles')">
+    </div>
+    
+    <div id="roleBox" style="padding: 0.5em 1em"></div>
+    
+    <div class="inline form-group" style="padding: 0.5em 1em">
+    <label for="numOfRoles"><b>Number of Positions</b><label>
+    <input type="text" id="numOfPositions" style="width: 50px" oninput="createBoxes('numOfPositions')">
+    </div>
+    
+    <div id="positionBox" style="padding: 0.5em 1em"></div>
+    
+    <div style="padding: 1em 1em 0 1em">
+    <button id="createShow" onclick="addRolesPositions()" class="action">Create Show</button>
+    <button id="closeSidebar" onclick="google.script.host.close()">Close</button>
+    </div>
+    
+    <div></div>
+    
+    <script>
+    
+    function loadOnSuccess(thespDenomsList) {
+    
+      var thespDenomsElmnt = document.createElement("p");
+      thespDenomsElmnt.setAttribute("id", "thespDenoms");
+      thespDenomsElmnt.value = thespDenomsList;
+      thespDenomsElmnt.style.display = "none";
+      document.body.appendChild(thespDenomsElmnt);
+      //console.log(document.getElementById("thespDenoms").value);
+      
+    }
+  
+    function loadFunction() {
+      google.script.run.withSuccessHandler(loadOnSuccess).compileThespianDenomList();
+    }
+    
+    function onCreateShowSuccess() {
+      google.script.host.close();
+    }
+    
+    function createBoxes(typeOfBox) {
+    
+      var numOfBoxes = parseInt(document.getElementById(typeOfBox).value);
+      var boxName;
+      var thespDenomsList = Array.from(document.getElementById("thespDenoms").value);
+      var curDenomsList = [];
+    
+      if (!(Number.isInteger(numOfBoxes))) {
+          numOfBoxes = 0;
+      }
+      
+      
+      if (typeOfBox == "numOfRoles") {
+        boxName = "role";
+        for (var i=0; i<thespDenomsList.length; i++) {
+          if (thespDenomsList[i].name == "Acting") {
+            curDenomsList.push(thespDenomsList[i]);
+          }
+        }
+      } else if (typeOfBox == "numOfPositions") {
+        boxName = "position";
+        for (var i=0; i<thespDenomsList.length; i++) {
+          if (thespDenomsList[i].name != "Acting") {
+            curDenomsList.push(thespDenomsList[i]);
+          }
+        }
+      }
+      
+      var boxList = Array.from(document.getElementsByName(boxName+"Div"));
+      
+      //console.log(boxList);
+      
+      if (boxList.length > 0) {     
+        for (var i=0; i<boxList.length; i++) {
+          document.getElementById(boxName+"Box").removeChild(boxList[i]);
+        }
+      }
+      
+      for (var i = 0; i<numOfBoxes; i++) {
+        
+        var curBox = document.createElement("div");
+        curBox.classList += "block form-group";
+        curBox.setAttribute("name", boxName+"Div");
+        curBox.setAttribute("id", boxName+"Div"+i.toString());
+      
+        var curInput = document.createElement("input");
+        curInput.setAttribute("id", boxName+i.toString());
+        curInput.setAttribute("name", boxName);
+        curInput.setAttribute("type", "text");
+        curInput.setAttribute("style", "width: 150px");
+        
+        var curLabel = document.createElement("label");
+        curLabel.setAttribute("from", boxName+"Div"+i.toString());
+        curLabel.innerHTML = boxName.charAt(0).toUpperCase() + boxName.slice(1) + " " + (i+1).toString();
+        
+        var curSelect = document.createElement("select");
+        curSelect.setAttribute("name", boxName+"Drop");
+        curSelect.setAttribute("style", "width: 150px");
+        for (var k=0; k<curDenomsList.length; k++) {
+          for (var q=0; q<curDenomsList[k].denoms.length; q++) {
+            var curOption = document.createElement("option");
+            curOption.text = curDenomsList[k].denoms[q][0];
+            curSelect.add(curOption);
+          }  
+        }
+        
+        curBox.appendChild(curLabel);
+        //console.log("Label Added");
+        curBox.appendChild(curInput);
+        //console.log("Input Field Added");
+        curBox.appendChild(curSelect);
+        document.getElementById(boxName+"Box").appendChild(curBox);
+        
+      }
+        
+    }
+    
+    function addRolesPositions() {
+      
+      var name = document.getElementById("showName").value;
+      var numOfShows = parseInt(document.getElementById("numOfShows").value);
+      var numOfRoles = parseInt(document.getElementById("numOfRoles").value);
+      var numOfPositions = parseInt(document.getElementById("numOfPositions").value);
+      var roleDrop = Array.from(document.getElementsByName("roleDrop"));
+      var positionDrop = Array.from(document.getElementsByName("positionDrop"));
+      
+      function getData(typeOfBox, num, dropdown) {
+        var curList = [];
+        for (var i=0; i<num; i++) {
+          var curRole = document.getElementById(typeOfBox+i.toString()).value;
+          var curSelect = dropdown[i];
+          var curOption = curSelect.options[curSelect.selectedIndex].value;
+          if (curRole.length == 0) {
+            curRole = curOption;
+          }
+          console.log([curRole, curOption]);
+          curList.push([curRole, curOption]);
+        }
+        return curList;
+      }
+      
+      var roleData = getData("role", numOfRoles, roleDrop);
+      var positionData = getData("position", numOfPositions, positionDrop);
+      
+      console.log([roleData, positionData]);
+      
+      function show(name, numOfShows, roleData, positionData) {
+        this.name = name;
+        this.numOfShows = numOfShows;
+        this.roleData = roleData;
+        this.positionData = positionData;
+      }
+      
+      var showData = new show(name, numOfShows, roleData, positionData);
+      
+      google.script.run.withSuccessHandler(onCreateShowSuccess).createShow(showData);
+      
+    }
+    
+    </script>
+    
+    </div>
+    
+  </body>
+</html>
