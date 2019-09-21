@@ -1,1 +1,532 @@
-{"files":[{"id":"ec1dea5a-8d11-4a7e-a430-481441400e93","name":"showCreator","type":"server_js","source":"function onOpen(e) {\n  SpreadsheetApp.getUi().createAddonMenu()\n  .addItem(\"Create Show\", \"createShowSidebar\").addSeparator()\n  .addItem(\"Add Cast and Crew\", \"createCastCrewSidebar\")\n  .addItem(\"Remove Students\", \"createRemoveStuSidebar\")\n  .addItem(\"Add Roles and Positions\", \"addRolePosSidebar\")\n  .addItem(\"Update Contact Information\", \"updateAllContactInfo\").addSeparator()\n  .addItem(\"Send Email\", \"createEmailSidebar\")\n  .addItem(\"T-Shirt Size Count\", \"countSizes\")\n  .addItem(\"Phone Numbers\", \"phoneList\").addToUi();\n}\n\nfunction onInstall(e){\n  onOpen(e);\n}\n\nfunction createShowSidebar() {\n  var ui \u003d HtmlService.createHtmlOutputFromFile(\"createshow\").setTitle(\"Create Show\");\n  SpreadsheetApp.getUi().showSidebar(ui);\n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction createShow(showData) {\n  \n  var ss \u003d SpreadsheetApp.getActiveSpreadsheet();\n  var sheetNames \u003d [\"Cast Info\", \"Crew Info\", \"Cast List\", \"Crew List\", \"Cast Points\", \"Crew Points\"];\n  var sheets \u003d ss.getSheets();\n  var ogSheet \u003d sheets[0];\n  ss.setActiveSheet(ogSheet);\n  ss.renameActiveSheet(\"tmp\");\n  \n  Logger.log(ogSheet);\n  \n  for (var i \u003d 1; i \u003c sheets.length; i++) {\n    ss.deleteSheet(sheets[i]);\n  }\n  \n  ss.rename(showData.name + \" Cast and Crew\");\n  Logger.log(sheetNames);\n  \n  for (var k \u003d 0; k \u003c sheetNames.length; k++) {\n    Logger.log(k);\n    ss.insertSheet(sheetNames[k], k);\n    Logger.log(\"Inserted: \" + sheetNames[k]);\n  }\n  \n  ss.deleteSheet(ogSheet);\n  \n  var castInfo \u003d ss.getSheetByName(\"Cast Info\");\n  var crewInfo \u003d ss.getSheetByName(\"Crew Info\");\n  var castList \u003d ss.getSheetByName(\"Cast List\");\n  var crewList \u003d ss.getSheetByName(\"Crew List\");\n  var castPoints \u003d ss.getSheetByName(\"Cast Points\");\n  var crewPoints \u003d ss.getSheetByName(\"Crew Points\");\n  \n  setupInfo(castInfo);\n  setupInfo(crewInfo);\n  setupList(castList);\n  setupList(crewList);\n  setupPoints(castPoints, showData);\n  setupPoints(crewPoints, showData);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction setupInfo(sheet) {\n \n  var colName;\n  \n  if (sheet.getName().toLowerCase().indexOf(\"cast\") !\u003d\u003d -1) {\n    colName \u003d \"Role\"; \n  } else {\n    colName \u003d \"Position\";\n  }\n  \n  sheet.appendRow([colName, \"Name\", \"Grade\", \"Email\", \"Phone\", \"T-Shirt Size\"]);\n  boldIt(sheet);\n  \n  sheet.setColumnWidth(1, 150);\n  sheet.setColumnWidth(2, 150);\n  sheet.setColumnWidth(3, 50);\n  sheet.setColumnWidth(4, 200);\n  sheet.setColumnWidth(5, 90);\n  sheet.setColumnWidth(6, 80);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction setupList(sheet) {\n  \n  var colName;\n  \n  if (sheet.getName().toLowerCase().indexOf(\"cast\") !\u003d\u003d -1) {\n    colName \u003d \"Role\"; \n  } else {\n    colName \u003d \"Position\";\n  }\n  \n  sheet.appendRow([colName, \"Names\"]);\n  boldIt(sheet);\n  \n  sheet.setColumnWidth(1, 150);\n  sheet.setColumnWidth(2, 500);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction setupPoints(sheet, showData) {\n \n  var colName;\n  var rolePosition;\n  \n  if (sheet.getName().toLowerCase().indexOf(\"cast\") !\u003d\u003d -1) {\n    colName \u003d \"Role\";\n    rolePosition \u003d showData.roleData;\n  } else {\n    colName \u003d \"Position\";\n    rolePosition \u003d showData.positionData;\n  }\n  \n  sheet.appendRow([\"Number of Shows:\", showData.numOfShows]);\n  sheet.appendRow([colName, \"Thespian Denomination\"]);\n  boldIt(sheet);\n  \n  for (var i\u003d0; i\u003crolePosition.length; i++) {\n    sheet.appendRow([rolePosition[i][0], rolePosition[i][1]]);\n  }\n  \n  sheet.setColumnWidth(1, 150);\n  sheet.setColumnWidth(2, 200);\n  \n  sheet.getDataRange().setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction addRolePos(rolePosList) {\n  \n  Logger.log(rolePosList);\n  \n  if (rolePosList[0] \u003d\u003d \"role\") {\n    var ss \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(\"Cast Points\");\n  } else {\n    var ss \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(\"Crew Points\");\n  }\n  \n  for (var i\u003d0; i\u003crolePosList[1].length; i++) {\n    Logger.log([rolePosList[1][i][0], rolePosList[1][i][1]]);\n    ss.appendRow([rolePosList[1][i][0], rolePosList[1][i][1]]);\n  }\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction boldIt(sheet) {\n  sheet.getDataRange().setFontWeight(\"bold\");\n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction createCastCrewSidebar() {\n  var ui \u003d HtmlService.createHtmlOutputFromFile(\"addcastcrew\").setTitle(\"Add Cast and Crew\");\n  SpreadsheetApp.getUi().showSidebar(ui);  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction compileStuNameList() {\n  \n  var dataSheet \u003d SpreadsheetApp.openByUrl(\"https://docs.google.com/spreadsheets/d/1pGFH8ap2ufeOtTaBRwRNJYbtWYJ9H7_kr_RfxlsPPtU/edit?usp\u003ddrive_web\u0026ouid\u003d114301735813714623852\");\n  var data \u003d dataSheet.getActiveSheet().getDataRange().getValues();\n  data \u003d data.splice(1, data.length);\n  \n  var nameList \u003d [];\n  var first;\n  var last;\n  \n  for (var i\u003d0; i\u003cdata.length; i++) {\n    first \u003d data[i][1].trim();\n    last \u003d data[i][2].trim();\n    nameList.push(first + \" \" + last);\n  }\n  \n  Logger.log(nameList.sort());\n  return nameList.sort();\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction compileThespianDenomList() {\n  \n  var dataSheet \u003d SpreadsheetApp.openByUrl(\"https://docs.google.com/spreadsheets/d/1TScK-pvRrMSdSB6Zj7meVCVj2vmjuisCR07Tw800rbg/edit#gid\u003d0\");\n  var data \u003d dataSheet.getActiveSheet().getDataRange().getValues();\n  data \u003d data.splice(1, data.length);\n  //Logger.log(data);\n  \n  var denomList \u003d [];\n  var denomType;\n  var denom;\n  var oneActPts;\n  var fullShowPts;\n  var found \u003d false;\n  \n  function denomTypeContainer(dType, curDenom) {\n    this.name \u003d dType;\n    this.denoms \u003d [curDenom];\n  }\n  \n  for (var i\u003d0; i\u003cdata.length; i++) {\n    denomType \u003d data[i][0].trim();\n    Logger.log(denomType);\n    denom \u003d data[i][1].trim();\n    //Logger.log(denom);\n    oneActPts \u003d parseInt(data[i][2]);\n    fullShowPts \u003d parseInt(data[i][3]);\n    for (var j\u003d0; j\u003cdenomList.length; j++) {\n      if (denomList[j].name \u003d\u003d denomType) {\n        //Logger.log(denom);\n        denomList[j].denoms.push([denom, oneActPts, fullShowPts]);\n        found \u003d true;\n        break;\n      }\n    }\n    if (!found) {\n      denomList.push(new denomTypeContainer(denomType, [denom, oneActPts, fullShowPts]));\n      Logger.log(denomList);\n    }\n    found \u003d false;\n  }\n  \n  Logger.log(denomList);\n  return denomList;\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction compileRolePosList(sheetName) {\n\n  var dataSheet \u003d SpreadsheetApp.getActiveSpreadsheet();\n  var data \u003d dataSheet.getSheetByName(sheetName).getDataRange().getValues();\n  data \u003d data.splice(2, data.length);\n  \n  var rolePosList \u003d [];\n  \n  for (var i\u003d0; i\u003cdata.length; i++) {\n    rolePosList.push(data[i][0]);\n  }\n  \n  return rolePosList;\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction compileLists() {\n  var nameList \u003d compileStuNameList();\n  var roleList \u003d compileRolePosList(\"Cast Points\");\n  var positionList \u003d compileRolePosList(\"Crew Points\");\n  Logger.log[nameList, roleList, positionList];\n  return [nameList, roleList, positionList];\n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction addCastCrew(castOrCrewSheet, role, numOfStu, names) {\n  \n  Logger.log(castOrCrewSheet.toString() +\"\\n\"+ role.toString() +\"\\n\"+ numOfStu.toString() +\"\\n\"+ names.toString());\n  \n  var ss \u003d SpreadsheetApp.getActiveSpreadsheet();\n  var listSheet \u003d ss.getSheetByName(castOrCrewSheet);\n  var listSheetRange \u003d listSheet.getDataRange();\n  var sheetData \u003d listSheetRange.getValues();\n  sheetData \u003d sheetData.slice(1, sheetData.length);\n  var nameString \u003d \"\";\n  var curRng;\n  var curValues;\n  var roleNotPresent \u003d true;\n  \n  for (var i\u003d0; i\u003cnames.length; i++) {\n    nameString \u003d nameString + names[i].toString() + \", \";\n  }\n  \n  for (var i\u003d0; i\u003csheetData.length; i++) {\n    if (role.toLowerCase() \u003d\u003d sheetData[i][0].toLowerCase()) {\n      curRng \u003d listSheet.getRange(i+2, 2);\n      curValues \u003d curRng.getValue();\n      if (curValues.length \u003e 0) {\n        curValues +\u003d \", \";\n      }\n      curValues \u003d curValues + nameString;\n      curRng.setValue(curValues.slice(0, curValues.length-2));\n      roleNotPresent \u003d false;\n      break;\n    }\n  }\n  \n  if (roleNotPresent) {\n    listSheet.appendRow([role, nameString.slice(0, nameString.length-2)]);\n  }\n  \n  listSheet.getDataRange().setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);\n  SpreadsheetApp.setActiveSheet(listSheet);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction addRolePosSidebar() {\n  \n  var ui \u003d HtmlService.createHtmlOutputFromFile(\"addrolepos\").setTitle(\"Add Roles or Positions\");\n  SpreadsheetApp.getUi().showSidebar(ui);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction createRemoveStuSidebar() {\n \n  var ui \u003d HtmlService.createHtmlOutputFromFile(\"removestudents\").setTitle(\"Remove Students\");\n  SpreadsheetApp.getUi().showSidebar(ui);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction removeStu() {\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction updateAllContactInfo() {\n  updateContactInfo(\"Cast List\", \"Cast Info\", \"Role\");\n  updateContactInfo(\"Crew List\", \"Crew Info\", \"Position\");\n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction updateContactInfo(listName, infoName, colName) {\n  \n  var listSheet \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(listName);\n  var infoSheet \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(infoName);\n  var regSheet \u003d SpreadsheetApp.openByUrl(\"https://docs.google.com/spreadsheets/d/1pGFH8ap2ufeOtTaBRwRNJYbtWYJ9H7_kr_RfxlsPPtU/edit#gid\u003d2060589657\").getActiveSheet();\n  var listData \u003d listSheet.getDataRange().getValues();\n  var regData \u003d regSheet.getDataRange().getValues();\n  var ui \u003d SpreadsheetApp.getUi();\n  \n  listData \u003d listData.slice(1, listData.length);\n  regData \u003d regData.slice(1, regData.length);\n  \n  var row;\n  var role;\n  var nameList;\n  var usedNameList \u003d [];\n  var name;\n  var firstNlast;\n  var notFound \u003d \"\";\n  \n  infoSheet.getDataRange().clear();\n  infoSheet.appendRow([colName, \"Name\", \"Grade\", \"Email\", \"Phone\", \"T-Shirt Size\"])\n  infoSheet.getDataRange().setFontWeight(\"bold\");\n  \n  for (i in listData) {\n    \n    role \u003d listData[i][0].toString();\n    nameList \u003d listData[i][1].toString().split(\", \");\n    \n    for (k in nameList) {\n      \n      firstNlast \u003d nameList[k].toString().split(\" \");\n      row \u003d findStu(firstNlast[0], firstNlast[1], regData);\n      \n      if (row \u003e -1 \u0026\u0026 usedNameList.indexOf(nameList[k]) \u003d\u003d -1) {\n        \n        usedNameList.push(nameList[k]);\n        infoSheet.appendRow([role, nameList[k], regData[row][4], regData[row][5], regData[row][6], regData[row][11]]);\n        \n      } else if (usedNameList.indexOf(nameList[k]) !\u003d -1) {\n      } else {\n        \n        infoSheet.appendRow([role, nameList[k]]);\n        \n      }\n      \n    } \n  }\n  \n  infoSheet.getDataRange().setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);\n  SpreadsheetApp.setActiveSheet(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(\"Cast Info\"));\n  return notFound.slice(0, notFound.length-2);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction findStu(firstName, lastName, data) {\n  \n  for (i in data) {\n    if (data[i][1].trim() \u003d\u003d firstName.trim() \u0026\u0026 data[i][2].trim() \u003d\u003d lastName.trim()) {   \n      return i;     \n    } \n  }\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction createEmailSidebar() {\n  \n  var ui \u003d HtmlService.createHtmlOutputFromFile(\"sendemail\").setTitle(\"Send Email\");\n  SpreadsheetApp.getUi().showSidebar(ui);\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction emailList(infoSheet) {\n  \n  var sheet \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(infoSheet);\n  var ui \u003d SpreadsheetApp.getUi();\n  \n  var emailList \u003d \"\";\n  var data \u003d sheet.getDataRange().getValues();\n  data \u003d data.slice(1, data.length);\n  \n  for (i in data) {\n    var emailAddress \u003d data[i][3];\n    emailList \u003d emailList + emailAddress + \", \";\n  }\n  \n  emailList \u003d emailList.slice(0, emailList.length - 2);\n  //Logger.log(emailList);\n  //SpreadsheetApp.getUi().alert(\"Emails\", \"This is a list of all the recognized emails:\\n\\n\" + emailList, ui.ButtonSet.OK);\n  return emailList;\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\n\nfunction sendEmail(infoSheet, subj, msg) {\n  var emails \u003d emailList(infoSheet);\n  GmailApp.sendEmail(emails, subj, msg);\n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction countSizes() {\n \n  var sheetName \u003d SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();\n  var ui \u003d SpreadsheetApp.getUi();\n  var size;\n  var s \u003d 0;\n  var m \u003d 0;\n  var l \u003d 0;\n  var xl \u003d 0;\n  var total;\n  var data;\n  \n  if (sheetName.slice(0,4) \u003d\u003d \"Cast\") {\n    data \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(\"Cast Info\").getDataRange().getValues();\n  } else if (sheetName.slice(0,4) \u003d\u003d \"Crew\") {\n    data \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(\"Crew Info\").getDataRange().getValues();\n  }\n  \n  for (i in data) {\n    \n    size \u003d data[i][5];\n    \n    switch (size) {\n      case \"S\":\n        s++;\n        break;\n      case \"M\":\n        m++;\n        break;\n      case \"L\":\n        l++;\n        break;\n      case \"XL\":\n        xl++;\n        break;\n    }\n    \n  }\n  \n  total \u003d s + m + l + xl;\n  \n  ui.alert(sheetName.slice(0,4)+\" Shirt Sizes\", \"Small: \" + s + \"\\nMedium: \" + m + \"\\nLarge: \" + l + \"\\nExtra Large: \" + xl + \"\\n\\nTotal: \" + total, ui.ButtonSet.OK)\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n\nfunction phoneList() {\n  \n  var sheetName \u003d SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();\n  var ui \u003d SpreadsheetApp.getUi();\n  \n  function genPhoneList(sheetName) {\n    \n    var data \u003d SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName).getDataRange().getValues();\n    var phoneList \u003d \"\";\n    \n    data \u003d data.slice(1, data.length);\n    \n    for (i in data) {\n      var phoneNum \u003d data[i][4];\n      if (phoneNum.toString().length \u003e 0) {\n        phoneList \u003d phoneList + phoneNum.toString() + \", \";\n      }\n    }\n    \n    phoneList \u003d phoneList.slice(0, phoneList.length - 2);\n    SpreadsheetApp.getUi().alert(sheetName.slice(0, 4)+\" Phone Numbers\", \"This is a list of all the recognized phone numbers:\\n\\n\" + phoneList, ui.ButtonSet.OK);\n    \n  }\n  \n  genPhoneList(\"Cast Info\");\n  genPhoneList(\"Crew Info\");\n  \n}\n\n//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"},{"id":"d1859f73-9d3d-49f5-a01a-971012415209","name":"createshow","type":"html","source":"\u003c!DOCTYPE html\u003e\n\u003clink rel\u003d\"stylesheet\" href\u003d\"https://ssl.gstatic.com/docs/script/css/add-ons1.css\"\u003e\n\u003chtml\u003e\n  \u003chead\u003e\n    \u003cbase target\u003d\"_top\"\u003e\n  \u003c/head\u003e\n  \u003cbody onload\u003d\"loadFunction()\"\u003e\n  \n    \u003cdiv style\u003d\"padding: 0.5em 1em\"\u003e\u003cp\u003e\n    Using this program will format the current spreadsheet. It will create 6 seperate sheets:\u003cbr\u003e\u003cbr\u003e\n    1. Cast Info\u003cbr\u003e\n    2. Crew Info\u003cbr\u003e\n    3. Cast List\u003cbr\u003e\n    4. Crew List\u003cbr\u003e\n    5. Cast Points\u003cbr\u003e\n    6. Crew Points\u003cbr\u003e\u003cbr\u003e\n    The cast and crew list can be used to manually add students to either cast or crew, while the info sheets will contain the personal information of each student. The points sheets\n    will contain each role/position and the corresponding Thespian point denomination. This corresponds to a certain number of points.\u003cbr\u003e\u003cbr\u003e\n    ALL CURRENT DATA IN SPREADSHEET WILL BE DELETED\n    \u003c/p\u003e\u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 1em\"\u003e\n    \u003cb\u003eShow Name\u003c/b\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv class\u003d\"inline form-group\" style\u003d\"margin: 0.5em 1em\"\u003e\n    \u003cinput type\u003d\"text\" id\u003d\"showName\" style\u003d\"width: 200px;\"\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 1em\"\u003e\n    \u003cb\u003eNumber of Shows\u003c/b\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv class\u003d\"inline form-group\" style\u003d\"margin: 0.5em 1em\"\u003e\n    \u003cinput type\u003d\"text\" id\u003d\"numOfShows\" style\u003d\"width: 50px;\"\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 1em\"\u003e\n    \u003cb\u003eRole Setup\u003c/b\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv class\u003d\"inline form-group\" style\u003d\"padding: 0.5em 1em\"\u003e\n    \u003clabel for\u003d\"numOfRoles\"\u003e\u003cb\u003eNumber of Roles\u003c/b\u003e\u003clabel\u003e\n    \u003cinput type\u003d\"text\" id\u003d\"numOfRoles\" style\u003d\"width: 50px\" oninput\u003d\"createBoxes(\u0027numOfRoles\u0027)\"\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv id\u003d\"roleBox\" style\u003d\"padding: 0.5em 1em\"\u003e\u003c/div\u003e\n    \n    \u003cdiv class\u003d\"inline form-group\" style\u003d\"padding: 0.5em 1em\"\u003e\n    \u003clabel for\u003d\"numOfRoles\"\u003e\u003cb\u003eNumber of Positions\u003c/b\u003e\u003clabel\u003e\n    \u003cinput type\u003d\"text\" id\u003d\"numOfPositions\" style\u003d\"width: 50px\" oninput\u003d\"createBoxes(\u0027numOfPositions\u0027)\"\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv id\u003d\"positionBox\" style\u003d\"padding: 0.5em 1em\"\u003e\u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 1em 1em 0 1em\"\u003e\n    \u003cbutton id\u003d\"createShow\" onclick\u003d\"addRolesPositions()\" class\u003d\"action\"\u003eCreate Show\u003c/button\u003e\n    \u003cbutton id\u003d\"closeSidebar\" onclick\u003d\"google.script.host.close()\"\u003eClose\u003c/button\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv\u003e\u003c/div\u003e\n    \n    \u003cscript\u003e\n    \n    function loadOnSuccess(thespDenomsList) {\n    \n      var thespDenomsElmnt \u003d document.createElement(\"p\");\n      thespDenomsElmnt.setAttribute(\"id\", \"thespDenoms\");\n      thespDenomsElmnt.value \u003d thespDenomsList;\n      thespDenomsElmnt.style.display \u003d \"none\";\n      document.body.appendChild(thespDenomsElmnt);\n      //console.log(document.getElementById(\"thespDenoms\").value);\n      \n    }\n  \n    function loadFunction() {\n      google.script.run.withSuccessHandler(loadOnSuccess).compileThespianDenomList();\n    }\n    \n    function onCreateShowSuccess() {\n      google.script.host.close();\n    }\n    \n    function createBoxes(typeOfBox) {\n    \n      var numOfBoxes \u003d parseInt(document.getElementById(typeOfBox).value);\n      var boxName;\n      var thespDenomsList \u003d Array.from(document.getElementById(\"thespDenoms\").value);\n      var curDenomsList \u003d [];\n    \n      if (!(Number.isInteger(numOfBoxes))) {\n          numOfBoxes \u003d 0;\n      }\n      \n      \n      if (typeOfBox \u003d\u003d \"numOfRoles\") {\n        boxName \u003d \"role\";\n        for (var i\u003d0; i\u003cthespDenomsList.length; i++) {\n          if (thespDenomsList[i].name \u003d\u003d \"Acting\") {\n            curDenomsList.push(thespDenomsList[i]);\n          }\n        }\n      } else if (typeOfBox \u003d\u003d \"numOfPositions\") {\n        boxName \u003d \"position\";\n        for (var i\u003d0; i\u003cthespDenomsList.length; i++) {\n          if (thespDenomsList[i].name !\u003d \"Acting\") {\n            curDenomsList.push(thespDenomsList[i]);\n          }\n        }\n      }\n      \n      var boxList \u003d Array.from(document.getElementsByName(boxName+\"Div\"));\n      \n      //console.log(boxList);\n      \n      if (boxList.length \u003e 0) {     \n        for (var i\u003d0; i\u003cboxList.length; i++) {\n          document.getElementById(boxName+\"Box\").removeChild(boxList[i]);\n        }\n      }\n      \n      for (var i \u003d 0; i\u003cnumOfBoxes; i++) {\n        \n        var curBox \u003d document.createElement(\"div\");\n        curBox.classList +\u003d \"block form-group\";\n        curBox.setAttribute(\"name\", boxName+\"Div\");\n        curBox.setAttribute(\"id\", boxName+\"Div\"+i.toString());\n      \n        var curInput \u003d document.createElement(\"input\");\n        curInput.setAttribute(\"id\", boxName+i.toString());\n        curInput.setAttribute(\"name\", boxName);\n        curInput.setAttribute(\"type\", \"text\");\n        curInput.setAttribute(\"style\", \"width: 150px\");\n        \n        var curLabel \u003d document.createElement(\"label\");\n        curLabel.setAttribute(\"from\", boxName+\"Div\"+i.toString());\n        curLabel.innerHTML \u003d boxName.charAt(0).toUpperCase() + boxName.slice(1) + \" \" + (i+1).toString();\n        \n        var curSelect \u003d document.createElement(\"select\");\n        curSelect.setAttribute(\"name\", boxName+\"Drop\");\n        curSelect.setAttribute(\"style\", \"width: 150px\");\n        for (var k\u003d0; k\u003ccurDenomsList.length; k++) {\n          for (var q\u003d0; q\u003ccurDenomsList[k].denoms.length; q++) {\n            var curOption \u003d document.createElement(\"option\");\n            curOption.text \u003d curDenomsList[k].denoms[q][0];\n            curSelect.add(curOption);\n          }  \n        }\n        \n        curBox.appendChild(curLabel);\n        //console.log(\"Label Added\");\n        curBox.appendChild(curInput);\n        //console.log(\"Input Field Added\");\n        curBox.appendChild(curSelect);\n        document.getElementById(boxName+\"Box\").appendChild(curBox);\n        \n      }\n        \n    }\n    \n    function addRolesPositions() {\n      \n      var name \u003d document.getElementById(\"showName\").value;\n      var numOfShows \u003d parseInt(document.getElementById(\"numOfShows\").value);\n      var numOfRoles \u003d parseInt(document.getElementById(\"numOfRoles\").value);\n      var numOfPositions \u003d parseInt(document.getElementById(\"numOfPositions\").value);\n      var roleDrop \u003d Array.from(document.getElementsByName(\"roleDrop\"));\n      var positionDrop \u003d Array.from(document.getElementsByName(\"positionDrop\"));\n      \n      function getData(typeOfBox, num, dropdown) {\n        var curList \u003d [];\n        for (var i\u003d0; i\u003cnum; i++) {\n          var curRole \u003d document.getElementById(typeOfBox+i.toString()).value;\n          var curSelect \u003d dropdown[i];\n          var curOption \u003d curSelect.options[curSelect.selectedIndex].value;\n          if (curRole.length \u003d\u003d 0) {\n            curRole \u003d curOption;\n          }\n          console.log([curRole, curOption]);\n          curList.push([curRole, curOption]);\n        }\n        return curList;\n      }\n      \n      var roleData \u003d getData(\"role\", numOfRoles, roleDrop);\n      var positionData \u003d getData(\"position\", numOfPositions, positionDrop);\n      \n      console.log([roleData, positionData]);\n      \n      function show(name, numOfShows, roleData, positionData) {\n        this.name \u003d name;\n        this.numOfShows \u003d numOfShows;\n        this.roleData \u003d roleData;\n        this.positionData \u003d positionData;\n      }\n      \n      var showData \u003d new show(name, numOfShows, roleData, positionData);\n      \n      google.script.run.withSuccessHandler(onCreateShowSuccess).createShow(showData);\n      \n    }\n    \n    \u003c/script\u003e\n    \n    \u003c/div\u003e\n    \n  \u003c/body\u003e\n\u003c/html\u003e\n"},{"id":"d9eba913-ce5d-4ffb-beb7-3f341ae1df89","name":"appsscript","type":"json","source":"{\n  \"timeZone\": \"America/Mexico_City\",\n  \"dependencies\": {\n  },\n  \"exceptionLogging\": \"STACKDRIVER\"\n}"},{"id":"a5cd6add-b47c-488a-8ecf-8a56d9b1ac4e","name":"addcastcrew","type":"html","source":"\u003c!DOCTYPE html\u003e\n\u003clink rel\u003d\"stylesheet\" href\u003d\"https://ssl.gstatic.com/docs/script/css/add-ons1.css\"\u003e\n\u003chtml\u003e\n  \u003chead\u003e\n    \u003cbase target\u003d\"_top\"\u003e\n  \u003c/head\u003e\n  \u003cbody onload\u003d\"loadFunction()\"\u003e\n  \n  \u003cdiv style\u003d\"padding: 0.5em 1em\"\u003e\n  \u003cb\u003eAre you adding students to cast or crew?\u003c/b\u003e\n  \u003c/div\u003e\n  \n  \u003cdiv style\u003d\"padding: 0.5em 1em 0 1em\"\u003e\n  \u003cinput type\u003d\"radio\" name\u003d\"castOrCrew\" id\u003d\"radioCast\" onclick\u003d\"changeToRole(document.getElementsByName(\u0027roleOrPos\u0027))\"\u003e\n  \u003clabel for\u003d\"radioCast\"\u003eCast\u003c/label\u003e\n  \u003c/div\u003e\n  \n  \u003cdiv style\u003d\"padding: 0 1em 0.5em 1em\"\u003e\n  \u003cinput type\u003d\"radio\" name\u003d\"castOrCrew\" id\u003d\"radioCrew\" onclick\u003d\"changeToPos(document.getElementsByName(\u0027roleOrPos\u0027))\"\u003e\n  \u003clabel for\u003d\"radioCrew\"\u003eCrew\u003c/label\u003e\n  \u003c/div\u003e\n  \n  \u003cdiv class\u003d\"inline form-group\" style\u003d\"padding: 0.5em 1em\"\u003e\n  \u003clabel for\u003d\"rolePos\" name\u003d\"roleOrPos\"\u003e\u003cb\u003eRole or Position\u003c/b\u003e\u003c/label\u003e\n  \u003cselect id\u003d\"rolePos\" style\u003d\"width: 150px\"\u003e\u003c/select\u003e\n  \u003c/div\u003e\n  \n  \u003cdiv class\u003d\"inline form-group\" style\u003d\"padding: 0.5em 0 1em 0\"\u003e\n  \u003clabel for\u003d\"numOfStu\"\u003e\u003cb\u003eNumber of Students\u003c/b\u003e\u003c/label\u003e\n  \u003cinput type\u003d\"text\" id\u003d\"numOfStu\" style\u003d\"width: 50px\" oninput\u003d\"genStudents()\"\u003e\n  \u003c/div\u003e\n  \n  \u003cdiv\u003e\n  \u003cp style\u003d\"padding: 0 1em\"\u003e\n  \u003cb\u003eAdd Students\u003c/b\u003e\u003cbr\u003eBy the way, you can start typing a name when you select a dropdown menu to search through the registered student names. You can also choose \"Not Registered\"\n  and type in the name of a student who has not yet registered.\n  \u003c/p\u003e\n  \u003c/div\u003e\n  \n  \u003cdiv id\u003d\"studentInputBox\" style\u003d\"padding: 0 1em 0.5em 1em\"\u003e\n  \u003c/div\u003e\n  \n  \u003cdiv style\u003d\"padding: 1em 1em\"\u003e\n  \u003cbutton id\u003d\"addStudents\" class\u003d\"action\" onclick\u003d\"addStudents()\"\u003eAdd Students\u003c/button\u003e\n  \u003cbutton id\u003d\"closeSidebar\" onclick\u003d\"google.script.host.close()\"\u003eClose\u003c/button\u003e\n  \u003c/div\u003e\n  \n  \u003cscript\u003e\n  \n  function loadOnSuccess(list) {\n  \n    var nmLstElement \u003d document.createElement(\"p\");\n    nmLstElement.setAttribute(\"id\", \"listOfStuNames\");\n    nmLstElement.value \u003d list[0];\n    nmLstElement.style.display \u003d \"none\";\n    document.body.appendChild(nmLstElement);\n    \n    var roleLstElement \u003d document.createElement(\"p\");\n    roleLstElement.setAttribute(\"id\", \"roleList\");\n    roleLstElement.value \u003d list[1];\n    roleLstElement.style.display \u003d \"none\";\n    document.body.appendChild(roleLstElement);\n    \n    var posLstElement \u003d document.createElement(\"p\");\n    posLstElement.setAttribute(\"id\", \"posList\");\n    posLstElement.value \u003d list[2];\n    posLstElement.style.display \u003d \"none\";\n    document.body.appendChild(posLstElement);\n    \n    //console.log(nmLstElement.value);\n    console.log(roleLstElement.value);\n    console.log(posLstElement.value);\n  }\n  \n  function loadFunction() {\n    google.script.run.withSuccessHandler(loadOnSuccess).compileLists();\n  }\n  \n  function changeToRole(rolPos) {\n  \n    rolPos[0].innerHTML \u003d \"\u003cb\u003eRole\u003c/b\u003e\";\n    var list \u003d Array.from(document.getElementById(\"roleList\").value);\n    var rolePosDrop \u003d document.getElementById(\"rolePos\");\n    \n    rolePosDrop.options.length \u003d 0;\n    \n    for (var i\u003d0; i\u003clist.length; i++) {\n      var curOption \u003d document.createElement(\"option\");\n      curOption.text \u003d list[i];\n      rolePosDrop.add(curOption);\n    }\n    \n  }\n  \n  function changeToPos(rolPos) {\n  \n    rolPos[0].innerHTML \u003d \"\u003cb\u003ePosition\u003c/b\u003e\";\n    var list \u003d Array.from(document.getElementById(\"posList\").value);\n    var rolePosDrop \u003d document.getElementById(\"rolePos\");\n    \n    rolePosDrop.options.length \u003d 0;\n    \n    for (var i\u003d0; i\u003clist.length; i++) {\n      var curOption \u003d document.createElement(\"option\");\n      curOption.text \u003d list[i];\n      rolePosDrop.add(curOption);\n    }\n    \n  }\n  \n  function genStudents() {\n    \n    var numOfStudents \u003d parseInt(document.getElementById(\"numOfStu\").value);\n    \n    if (!(Number.isInteger(numOfStudents))) {\n      numOfStudents \u003d 0;\n    }\n    \n    var curLabel;\n    var curInput;\n    var curSelect;\n    var curOption;\n    var curOther;\n    var curDiv;\n    \n    var stuInptBx \u003d document.getElementById(\"studentInputBox\");\n    var nameList \u003d Array.from(document.getElementById(\"listOfStuNames\").value);\n    \n    var studentInputList \u003d Array.from(document.getElementsByName(\"stuNames\"));\n    \n    if (studentInputList.length \u003e 0) {\n      for (var i\u003d0; i \u003c studentInputList.length; i++) {\n        stuInptBx.removeChild(studentInputList[i]);\n      }\n    }\n  \n    for (var i\u003d0; i\u003cnumOfStudents; i++) {\n      \n      curInput \u003d document.createElement(\"div\");\n      curInput.classList +\u003d \"block form-group\";\n      curInput.setAttribute(\"name\", \"stuNames\");\n      curInput.setAttribute(\"id\", \"studentDiv\" + i.toString());\n      \n      curSelect \u003d document.createElement(\"SELECT\");\n      curSelect.setAttribute(\"name\", \"dropdown\");\n      curSelect.setAttribute(\"id\", \"stuNameSelect\" + i.toString());\n      curSelect.setAttribute(\"onchange\", \"otherOptionCreate(this)\");\n      curSelect.setAttribute(\"style\", \"width: 150px\");\n      \n      for (var k\u003d0; k\u003cnameList.length; k++) {\n        curOption \u003d document.createElement(\"option\");\n        curOption.text \u003d nameList[k];\n        curSelect.add(curOption);\n      }\n      \n      curOption \u003d document.createElement(\"option\");\n      curOption.text \u003d \"Not Registered\";\n      curSelect.add(curOption);\n      \n      curOther \u003d document.createElement(\"input\");\n      curOther.setAttribute(\"id\", \"other\" + i.toString());\n      curOther.setAttribute(\"name\", \"otherStudents\");\n      curOther.setAttribute(\"type\", \"text\");\n      curOther.setAttribute(\"style\", \"width: 150px\");\n      curOther.style.display \u003d \"none\";\n      \n      curLabel \u003d document.createElement(\"LABEL\");\n      curLabel.setAttribute(\"from\", \"stuNameSelect\" + i.toString());\n      curLabel.innerHTML \u003d \"Student \" + (i+1).toString();\n      \n      curInput.appendChild(curLabel);\n      curInput.appendChild(curSelect);\n      curInput.appendChild(curOther);\n      \n      stuInptBx.appendChild(curInput);\n      \n    }\n  \n  }\n  \n  function otherOptionCreate(curSelect) {\n    \n    var stuNum \u003d curSelect.id.slice(13, curSelect.id.length);\n    console.log(stuNum);\n    \n    if (curSelect.options[curSelect.selectedIndex].value \u003d\u003d \"Not Registered\") {\n      console.log(\"Other Option Selected\");\n      document.getElementById(\"other\" + stuNum).style.display \u003d \"block\";\n    } else {\n      document.getElementById(\"other\" + stuNum).style.display \u003d \"none\";\n    }\n    \n  }\n  \n  function addStudentsOnSuccess() {\n    //window.alert(\"Students have been added.\");\n    google.script.run.createCastCrewSidebar();\n  }\n  \n  function addStudentsOnFailure() {\n    window.alert(\"There was an ERROR! Please try again.\");\n  }\n  \n  function addStudents() {\n    \n    var castOrCrewSheet;\n    var curDropdown;\n    var curName;\n    var curOtherStu;\n    var names \u003d[];\n    \n    var castRadio \u003d document.getElementById(\"radioCast\").checked;\n    var crewRadio \u003d document.getElementById(\"radioCrew\").checked;\n    var roleOrPosElmnt \u003d document.getElementById(\"rolePos\");\n    var roleOrPosSelected \u003droleOrPosElmnt.options[roleOrPosElmnt.selectedIndex].value;\n    var numOfStudents \u003d parseInt(document.getElementById(\"numOfStu\").value);\n    var dropdowns \u003d Array.from(document.getElementsByName(\"dropdown\"));\n    var others \u003d Array.from(document.getElementsByName(\"otherStudents\"));\n    \n    try {\n      \n      if (castRadio) {\n        castOrCrewSheet \u003d \"Cast List\";\n      } else if (crewRadio) {\n        castOrCrewSheet \u003d \"Crew List\";\n      } else {\n        throw \"error\";\n      }\n      \n      var test \u003d 1 + numOfStudents;\n      \n      for (var i\u003d0; i\u003cdropdowns.length; i++) {\n        curDropdown \u003d dropdowns[i];\n        curName \u003d curDropdown.options[curDropdown.selectedIndex].value;\n        if (curName !\u003d \"Not Registered\") {\n          names.push(curName);\n        }\n        curOtherStu \u003d others[i];\n        if (curOtherStu.style.display !\u003d \"none\") {\n          names.push(curOtherStu.value);\n        }\n      }\n      \n      google.script.run.withSuccessHandler(addStudentsOnSuccess).withFailureHandler(addStudentsOnFailure).addCastCrew(castOrCrewSheet, roleOrPosSelected, numOfStudents, names);\n      \n    }\n    \n    catch(error) {\n      addStudentsOnFailure();\n    }\n  \n  }\n  \n  \u003c/script\u003e\n    \n  \u003c/body\u003e\n\u003c/html\u003e\n\n\n"},{"id":"a13f3902-5367-4281-9870-859a403b62f8","name":"sendemail","type":"html","source":"\u003c!DOCTYPE html\u003e\n\u003clink rel\u003d\"stylesheet\" href\u003d\"https://ssl.gstatic.com/docs/script/css/add-ons1.css\"\u003e\n\u003chtml\u003e\n  \u003chead\u003e\n    \u003cbase target\u003d\"_top\"\u003e\n  \u003c/head\u003e\n  \u003cbody style\u003d\"padding: 0 1em\"\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 0\"\u003e\n    \u003cb\u003eRecipients\u003c/b\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv stlye\u003d\"padding: 0.5em 0 0 0\"\u003e\n    \u003cinput type\u003d\"checkbox\" id\u003d\"checkCast\" name\u003d\"checkRecip\"\u003e\n    \u003clabel for\u003d\"checkCast\"\u003eCast\u003c/label\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 0 0 0.5em 0\"\u003e\n    \u003cinput type\u003d\"checkbox\" id\u003d\"checkCrew\" name\u003d\"checkRecip\"\u003e\n    \u003clabel for\u003d\"crewCast\"\u003eCrew\u003c/label\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 0\"\u003e\n    \u003cb\u003eEmail Subject\u003c/b\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 0\"\u003e\n    \u003cinput type\u003d\"text\" id\u003d\"subject\" style\u003d\"width: 150px\"\u003e\n    \u003cdiv\u003e\n    \n    \u003cdiv style\u003d\"padding: 1em 0 0.5em 0\"\u003e\n    \u003cb\u003eEmail Body\u003c/b\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 0\"\u003e\n    \u003ctextarea type\u003d\"textarea\" id\u003d\"emailBody\" style\u003d\"width: 275px\" rows\u003d\"25\"\u003e\u003c/textarea\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 1em 0\"\u003e\n    \u003cbutton id\u003d\"sendEmail\" class\u003d\"action\" onclick\u003d\"sendEmail()\"\u003eSend Email\u003c/button\u003e\n    \u003cbutton id\u003d\"closeSidebar\" onclick\u003d\"google.script.host.close()\"\u003eClose\u003c/button\u003e\n    \u003c/div\u003e\n    \n    \u003cscript\u003e\n    \n    function emailOnSuccess() {\n      window.alert(\"Email sent.\");\n      google.script.host.close();\n    }\n    \n    function sendEmail() {\n    \n      var checkboxCast \u003d document.getElementById(\"checkCast\");\n      var checkboxCrew \u003d document.getElementById(\"checkCrew\");\n      var subj \u003d document.getElementById(\"subject\").value;\n      var msg \u003d document.getElementById(\"emailBody\").value;\n      \n      if (checkboxCast.checked \u0026\u0026 checkboxCrew.checked) {\n        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail(\"Cast Info\", subj, msg);\n        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail(\"Crew Info\", subj, msg);\n      } else if (checkboxCast.checked) {\n        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail(\"Cast Info\", subj, msg);\n      } else if (checkboxCrew.checked) {\n        google.script.run.withSuccessHandler(emailOnSuccess).sendEmail(\"Crew Info\", subj, msg);\n      } else {\n        window.alert(\"No recipients were selected.\");\n      }\n      \n    }\n    \n    \u003c/script\u003e\n    \n  \u003c/body\u003e\n\u003c/html\u003e\n\n\n"},{"id":"f44e2aae-ba04-49ef-8391-43a1b31a9a55","name":"removestudents","type":"html","source":"\u003c!DOCTYPE html\u003e\n\u003clink rel\u003d\"stylesheet\" href\u003d\"https://ssl.gstatic.com/docs/script/css/add-ons1.css\"\u003e\n\u003chtml\u003e\n  \u003chead\u003e\n    \u003cbase target\u003d\"_top\"\u003e\n  \u003c/head\u003e\n  \u003cbody onload\u003d\"loadFunction\"\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 1em\"\u003e\n      \u003cp\u003eSelect the number of students you want to remove, as well as the names of the students.\n      If the person has not registered, select \"Not Registered\" and type in their first and last name.\u003c/p\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv class\u003d\"inline form-group\" style\u003d\"padding: 0.5em 1em\"\u003e\n      \u003clabel for\u003d\"numOfStu\"\u003e\u003cb\u003eNumber of Students\u003c/b\u003e\u003c/label\u003e\n      \u003cinput type\u003d\"text\" id\u003d\"numOfStu\" style\u003d\"width: 50px\" oninput\u003d\"genStudents\"\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv id\u003d\"studentInputBox\" style\u003d\"padding: 0 1em 0.5em 1em\"\u003e\u003c/div\u003e\n    \n    \u003cscript\u003e\n    \n    function loadOnSuccess(nmLst) {\n      var nmLstElement \u003d document.createElement(\"p\");\n      nmLstElement.setAttribute(\"id\", \"listOfStuNames\");\n      nmLstElement.value \u003d nmLst;\n      nmLstElement.style.display \u003d \"none\";\n      document.body.appendChild(nmLstElement);\n    \n      var invStore \u003d document.createElement(\"p\");\n      invStore.setAttribute(\"id\", \"invStore\");\n      invStore.style.display \u003d \"none\";\n      document.body.appendChild(invStore);\n    \n      console.log(nmLstElement.value);\n    }\n  \n    function loadFunction() {\n      google.script.run.withSuccessHandler(loadOnSuccess).compileStuNameList();\n    }\n    \n    function genStudents() {\n    \n      var numOfStudents \u003d parseInt(document.getElementById(\"numOfStu\").value);\n    \n      if (!(Number.isInteger(numOfStudents))) {\n        numOfStudents \u003d 0;\n      }\n    \n      var curLabel;\n      var curInput;\n      var curSelect;\n      var curOption;\n      var curOther;\n      var curDiv;\n    \n      var stuInptBx \u003d document.getElementById(\"studentInputBox\");\n      var nameList \u003d Array.from(document.getElementById(\"listOfStuNames\").value);\n    \n      var studentInputList \u003d Array.from(document.getElementsByName(\"stuNames\"));\n    \n      if (studentInputList.length \u003e 0) {\n        for (var i\u003d0; i \u003c studentInputList.length; i++) {\n          stuInptBx.removeChild(studentInputList[i]);\n        }\n      }\n  \n      for (var i\u003d0; i\u003cnumOfStudents; i++) {\n      \n        curInput \u003d document.createElement(\"div\");\n        curInput.classList +\u003d \"block form-group\";\n        curInput.setAttribute(\"name\", \"stuNames\");\n        curInput.setAttribute(\"id\", \"studentDiv\" + i.toString());\n      \n        curSelect \u003d document.createElement(\"SELECT\");\n        curSelect.setAttribute(\"name\", \"dropdown\");\n        curSelect.setAttribute(\"id\", \"stuNameSelect\" + i.toString());\n        //document.getElementById(\"invStore\").value \u003d i.toString();\n        curSelect.setAttribute(\"onchange\", \"otherOptionCreate(this)\");\n        curSelect.setAttribute(\"style\", \"width: 150px\");\n      \n        for (var k\u003d0; k\u003cnameList.length; k++) {\n          curOption \u003d document.createElement(\"option\");\n          curOption.text \u003d nameList[k];\n          curSelect.add(curOption);\n        }\n      \n        curOption \u003d document.createElement(\"option\");\n        curOption.text \u003d \"Not Registered\";\n        curSelect.add(curOption);\n      \n        curOther \u003d document.createElement(\"input\");\n        curOther.setAttribute(\"id\", \"other\" + i.toString());\n        curOther.setAttribute(\"name\", \"otherStudents\");\n        curOther.setAttribute(\"type\", \"text\");\n        curOther.setAttribute(\"style\", \"width: 150px\");\n        curOther.style.display \u003d \"none\";\n      \n        curLabel \u003d document.createElement(\"LABEL\");\n        curLabel.setAttribute(\"from\", \"stuNameSelect\" + i.toString());\n        curLabel.innerHTML \u003d \"Student \" + (i+1).toString();\n      \n        curInput.appendChild(curLabel);\n        curInput.appendChild(curSelect);\n        curInput.appendChild(curOther);\n      \n        stuInptBx.appendChild(curInput);\n      \n      }\n  \n    }\n  \n    function otherOptionCreate(curSelect) {\n    \n      var stuNum \u003d curSelect.id.slice(13, curSelect.id.length);\n      console.log(stuNum);\n    \n      if (curSelect.options[curSelect.selectedIndex].value \u003d\u003d \"Not Registered\") {\n        console.log(\"Other Option Selected\");\n        document.getElementById(\"other\" + stuNum).style.display \u003d \"block\";\n      } else {\n        document.getElementById(\"other\" + stuNum).style.display \u003d \"none\";\n      }\n    \n    }\n    \n    \u003c/script\u003e\n    \n  \u003c/body\u003e\n\u003c/html\u003e\n\n\n"},{"id":"9ce01a05-d5df-442a-9792-851c1345f5b5","name":"addrolepos","type":"html","source":"\u003c!DOCTYPE html\u003e\n\u003clink rel\u003d\"stylesheet\" href\u003d\"https://ssl.gstatic.com/docs/script/css/add-ons1.css\"\u003e\n\u003chtml\u003e\n  \u003chead\u003e\n    \u003cbase target\u003d\"_top\"\u003e\n  \u003c/head\u003e\n  \u003cbody onload\u003d\"loadFunction()\"\u003e\n    \n    \u003cdiv style\u003d\"padding: 0.5em 1em\"\u003e\n    \u003cb\u003eAre you adding students to cast or crew?\u003c/b\u003e\n    \u003c/div\u003e\n  \n    \u003cdiv style\u003d\"padding: 0.5em 1em 0 1em\"\u003e\n    \u003cinput type\u003d\"radio\" name\u003d\"castOrCrew\" id\u003d\"radioCast\" onclick\u003d\"changeToRole(document.getElementsByName(\u0027numOfRolePosLabel\u0027))\"\u003e\n    \u003clabel for\u003d\"radioCast\"\u003eCast\u003c/label\u003e\n    \u003c/div\u003e\n  \n    \u003cdiv style\u003d\"padding: 0 1em 0.5em 1em\"\u003e\n    \u003cinput type\u003d\"radio\" name\u003d\"castOrCrew\" id\u003d\"radioCrew\" onclick\u003d\"changeToPos(document.getElementsByName(\u0027numOfRolePosLabel\u0027))\"\u003e\n    \u003clabel for\u003d\"radioCrew\"\u003eCrew\u003c/label\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv class\u003d\"inline form-group\" style\u003d\"padding: 0.5em 1em\"\u003e\n    \u003clabel for\u003d\"numOfRolePos\" name\u003d\"numOfRolePosLabel\"\u003eNumber of Roles or Positions\u003c/label\u003e\n    \u003cinput type\u003d\"text\" id\u003d\"numOfRolePos\" style\u003d\"width: 50px\" oninput\u003d\"createBoxes()\"\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv id\u003d\"rolePosBox\" style\u003d\"padding: 0.5em 1em\"\u003e\u003c/div\u003e\n    \n    \u003cdiv style\u003d\"padding: 1em 1em 0 1em\"\u003e\n    \u003cbutton id\u003d\"createShow\" onclick\u003d\"addRolesPositions()\" class\u003d\"action\"\u003eAdd Roles or Positions\u003c/button\u003e\n    \u003cbutton id\u003d\"closeSidebar\" onclick\u003d\"google.script.host.close()\"\u003eClose\u003c/button\u003e\n    \u003c/div\u003e\n    \n  \u003cscript\u003e\n  \n  function loadOnSuccess(thespDenomsList) {\n    \n      var thespDenomsElmnt \u003d document.createElement(\"p\");\n      thespDenomsElmnt.setAttribute(\"id\", \"thespDenoms\");\n      thespDenomsElmnt.value \u003d thespDenomsList;\n      thespDenomsElmnt.style.display \u003d \"none\";\n      document.body.appendChild(thespDenomsElmnt);\n      //console.log(document.getElementById(\"thespDenoms\").value);\n      \n    }\n  \n    function loadFunction() {\n      google.script.run.withSuccessHandler(loadOnSuccess).compileThespianDenomList();\n    }\n    \n    function addRolePosSuccess() {\n      google.script.host.close();\n    }\n    \n    function changeToRole(rolPos) {\n      rolPos[0].innerHTML \u003d \"Number of Roles\";\n      createBoxes();\n    }\n  \n    function changeToPos(rolPos) {\n      rolPos[0].innerHTML \u003d \"Number of Positions\";\n      createBoxes();\n    }\n    \n    function buttonSelect() {\n      \n      var castButton \u003d document.getElementById(\"radioCast\");\n      var crewButton \u003d document.getElementById(\"radioCrew\");\n      var checkedButton \u003d \"none\";\n      \n      if (castButton.checked) {\n        checkedButton \u003d \"role\";\n      } else if (crewButton.checked) {\n        checkedButton \u003d \"position\";\n      }\n      \n      return checkedButton;\n      \n    }\n    \n    function createBoxes() {\n    \n      var numOfBoxes \u003d parseInt(document.getElementById(\"numOfRolePos\").value);\n      var thespDenomsList \u003d Array.from(document.getElementById(\"thespDenoms\").value);\n      var curDenomsList \u003d [];\n      var boxName \u003d buttonSelect();\n    \n      if (!(Number.isInteger(numOfBoxes))) {\n          numOfBoxes \u003d 0;\n      }\n      \n      if (boxName \u003d\u003d \"role\") {\n        for (var i\u003d0; i\u003cthespDenomsList.length; i++) {\n          if (thespDenomsList[i].name \u003d\u003d \"Acting\") {\n            curDenomsList.push(thespDenomsList[i]);\n          }\n        }\n      } else if (boxName \u003d\u003d \"position\") {\n        for (var i\u003d0; i\u003cthespDenomsList.length; i++) {\n          if (thespDenomsList[i].name !\u003d \"Acting\") {\n            curDenomsList.push(thespDenomsList[i]);\n          }\n        }\n      } else {\n        numOfBoxes \u003d 0;\n      }\n      \n      var boxList \u003d Array.from(document.getElementsByName(\"rolePosDiv\"));\n      \n      //console.log(boxList);\n      \n      if (boxList.length \u003e 0) {     \n        for (var i\u003d0; i\u003cboxList.length; i++) {\n          document.getElementById(\"rolePosBox\").removeChild(boxList[i]);\n        }\n      }\n      \n      for (var i \u003d 0; i\u003cnumOfBoxes; i++) {\n        \n        var curBox \u003d document.createElement(\"div\");\n        curBox.classList +\u003d \"block form-group\";\n        curBox.setAttribute(\"name\", \"rolePosDiv\");\n        curBox.setAttribute(\"id\", \"rolePosDiv\"+i.toString());\n      \n        var curInput \u003d document.createElement(\"input\");\n        curInput.setAttribute(\"id\", \"rolePos\"+i.toString());\n        curInput.setAttribute(\"name\", \"rolePos\");\n        curInput.setAttribute(\"type\", \"text\");\n        curInput.setAttribute(\"style\", \"width: 150px\");\n        \n        var curLabel \u003d document.createElement(\"label\");\n        curLabel.setAttribute(\"from\", \"rolePosDiv\"+i.toString());\n        curLabel.innerHTML \u003d boxName.charAt(0).toUpperCase() + boxName.slice(1) + \" \" + (i+1).toString();\n        \n        var curSelect \u003d document.createElement(\"select\");\n        curSelect.setAttribute(\"name\", \"rolePosDrop\");\n        curSelect.setAttribute(\"style\", \"width: 150px\");\n        for (var k\u003d0; k\u003ccurDenomsList.length; k++) {\n          for (var q\u003d0; q\u003ccurDenomsList[k].denoms.length; q++) {\n            var curOption \u003d document.createElement(\"option\");\n            curOption.text \u003d curDenomsList[k].denoms[q][0];\n            curSelect.add(curOption);\n          }  \n        }\n        \n        curBox.appendChild(curLabel);\n        //console.log(\"Label Added\");\n        curBox.appendChild(curInput);\n        //console.log(\"Input Field Added\");\n        curBox.appendChild(curSelect);\n        document.getElementById(\"rolePosBox\").appendChild(curBox);\n        \n      }\n        \n    }\n    \n    function addRolesPositions() {\n\n      var numOfRolePos \u003d parseInt(document.getElementById(\"numOfRolePos\").value);\n      var roleDrop \u003d Array.from(document.getElementsByName(\"rolePosDrop\"));\n      \n      function getData(num, dropdown) {\n        var curList \u003d [];\n        for (var i\u003d0; i\u003cnum; i++) {\n          var curRolePos \u003d document.getElementById(\"rolePos\"+i.toString()).value;\n          var curSelect \u003d dropdown[i];\n          var curOption \u003d curSelect.options[curSelect.selectedIndex].value;\n          if (curRolePos.length \u003d\u003d 0) {\n            curRolePos \u003d curOption;\n          }\n          console.log([curRolePos, curOption]);\n          curList.push([curRolePos, curOption]);\n        }\n        return curList;\n      }\n      \n      var rolePosData \u003d getData(numOfRolePos, roleDrop);\n      console.log(rolePosData);\n      \n      google.script.run.withSuccessHandler(addRolePosSuccess).addRolePos([buttonSelect(), rolePosData]);\n      \n    }\n  \n  \u003c/script\u003e\n  \n  \u003c/body\u003e\n\u003c/html\u003e\n\n\n"}]}
+function onOpen(e) {
+  SpreadsheetApp.getUi().createAddonMenu()
+  .addItem("Create Show", "createShowSidebar").addSeparator()
+  .addItem("Add Cast and Crew", "createCastCrewSidebar")
+  .addItem("Remove Students", "createRemoveStuSidebar")
+  .addItem("Add Roles and Positions", "addRolePosSidebar")
+  .addItem("Update Contact Information", "updateAllContactInfo").addSeparator()
+  .addItem("Send Email", "createEmailSidebar")
+  .addItem("T-Shirt Size Count", "countSizes")
+  .addItem("Phone Numbers", "phoneList").addToUi();
+}
+
+function onInstall(e){
+  onOpen(e);
+}
+
+function createShowSidebar() {
+  var ui = HtmlService.createHtmlOutputFromFile("createshow").setTitle("Create Show");
+  SpreadsheetApp.getUi().showSidebar(ui);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function createShow(showData) {
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetNames = ["Cast Info", "Crew Info", "Cast List", "Crew List", "Cast Points", "Crew Points"];
+  var sheets = ss.getSheets();
+  var ogSheet = sheets[0];
+  ss.setActiveSheet(ogSheet);
+  ss.renameActiveSheet("tmp");
+  
+  Logger.log(ogSheet);
+  
+  for (var i = 1; i < sheets.length; i++) {
+    ss.deleteSheet(sheets[i]);
+  }
+  
+  ss.rename(showData.name + " Cast and Crew");
+  Logger.log(sheetNames);
+  
+  for (var k = 0; k < sheetNames.length; k++) {
+    Logger.log(k);
+    ss.insertSheet(sheetNames[k], k);
+    Logger.log("Inserted: " + sheetNames[k]);
+  }
+  
+  ss.deleteSheet(ogSheet);
+  
+  var castInfo = ss.getSheetByName("Cast Info");
+  var crewInfo = ss.getSheetByName("Crew Info");
+  var castList = ss.getSheetByName("Cast List");
+  var crewList = ss.getSheetByName("Crew List");
+  var castPoints = ss.getSheetByName("Cast Points");
+  var crewPoints = ss.getSheetByName("Crew Points");
+  
+  setupInfo(castInfo);
+  setupInfo(crewInfo);
+  setupList(castList);
+  setupList(crewList);
+  setupPoints(castPoints, showData);
+  setupPoints(crewPoints, showData);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function setupInfo(sheet) {
+ 
+  var colName;
+  
+  if (sheet.getName().toLowerCase().indexOf("cast") !== -1) {
+    colName = "Role"; 
+  } else {
+    colName = "Position";
+  }
+  
+  sheet.appendRow([colName, "Name", "Grade", "Email", "Phone", "T-Shirt Size"]);
+  boldIt(sheet);
+  
+  sheet.setColumnWidth(1, 150);
+  sheet.setColumnWidth(2, 150);
+  sheet.setColumnWidth(3, 50);
+  sheet.setColumnWidth(4, 200);
+  sheet.setColumnWidth(5, 90);
+  sheet.setColumnWidth(6, 80);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function setupList(sheet) {
+  
+  var colName;
+  
+  if (sheet.getName().toLowerCase().indexOf("cast") !== -1) {
+    colName = "Role"; 
+  } else {
+    colName = "Position";
+  }
+  
+  sheet.appendRow([colName, "Names"]);
+  boldIt(sheet);
+  
+  sheet.setColumnWidth(1, 150);
+  sheet.setColumnWidth(2, 500);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function setupPoints(sheet, showData) {
+ 
+  var colName;
+  var rolePosition;
+  
+  if (sheet.getName().toLowerCase().indexOf("cast") !== -1) {
+    colName = "Role";
+    rolePosition = showData.roleData;
+  } else {
+    colName = "Position";
+    rolePosition = showData.positionData;
+  }
+  
+  sheet.appendRow(["Number of Shows:", showData.numOfShows]);
+  sheet.appendRow([colName, "Thespian Denomination"]);
+  boldIt(sheet);
+  
+  for (var i=0; i<rolePosition.length; i++) {
+    sheet.appendRow([rolePosition[i][0], rolePosition[i][1]]);
+  }
+  
+  sheet.setColumnWidth(1, 150);
+  sheet.setColumnWidth(2, 200);
+  
+  sheet.getDataRange().setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function addRolePos(rolePosList) {
+  
+  Logger.log(rolePosList);
+  
+  if (rolePosList[0] == "role") {
+    var ss = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Cast Points");
+  } else {
+    var ss = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Crew Points");
+  }
+  
+  for (var i=0; i<rolePosList[1].length; i++) {
+    Logger.log([rolePosList[1][i][0], rolePosList[1][i][1]]);
+    ss.appendRow([rolePosList[1][i][0], rolePosList[1][i][1]]);
+  }
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function boldIt(sheet) {
+  sheet.getDataRange().setFontWeight("bold");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function createCastCrewSidebar() {
+  var ui = HtmlService.createHtmlOutputFromFile("addcastcrew").setTitle("Add Cast and Crew");
+  SpreadsheetApp.getUi().showSidebar(ui);  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function compileStuNameList() {
+  
+  var dataSheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1pGFH8ap2ufeOtTaBRwRNJYbtWYJ9H7_kr_RfxlsPPtU/edit?usp=drive_web&ouid=114301735813714623852");
+  var data = dataSheet.getActiveSheet().getDataRange().getValues();
+  data = data.splice(1, data.length);
+  
+  var nameList = [];
+  var first;
+  var last;
+  
+  for (var i=0; i<data.length; i++) {
+    first = data[i][1].trim();
+    last = data[i][2].trim();
+    nameList.push(first + " " + last);
+  }
+  
+  Logger.log(nameList.sort());
+  return nameList.sort();
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function compileThespianDenomList() {
+  
+  var dataSheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1TScK-pvRrMSdSB6Zj7meVCVj2vmjuisCR07Tw800rbg/edit#gid=0");
+  var data = dataSheet.getActiveSheet().getDataRange().getValues();
+  data = data.splice(1, data.length);
+  //Logger.log(data);
+  
+  var denomList = [];
+  var denomType;
+  var denom;
+  var oneActPts;
+  var fullShowPts;
+  var found = false;
+  
+  function denomTypeContainer(dType, curDenom) {
+    this.name = dType;
+    this.denoms = [curDenom];
+  }
+  
+  for (var i=0; i<data.length; i++) {
+    denomType = data[i][0].trim();
+    Logger.log(denomType);
+    denom = data[i][1].trim();
+    //Logger.log(denom);
+    oneActPts = parseInt(data[i][2]);
+    fullShowPts = parseInt(data[i][3]);
+    for (var j=0; j<denomList.length; j++) {
+      if (denomList[j].name == denomType) {
+        //Logger.log(denom);
+        denomList[j].denoms.push([denom, oneActPts, fullShowPts]);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      denomList.push(new denomTypeContainer(denomType, [denom, oneActPts, fullShowPts]));
+      Logger.log(denomList);
+    }
+    found = false;
+  }
+  
+  Logger.log(denomList);
+  return denomList;
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function compileRolePosList(sheetName) {
+
+  var dataSheet = SpreadsheetApp.getActiveSpreadsheet();
+  var data = dataSheet.getSheetByName(sheetName).getDataRange().getValues();
+  data = data.splice(2, data.length);
+  
+  var rolePosList = [];
+  
+  for (var i=0; i<data.length; i++) {
+    rolePosList.push(data[i][0]);
+  }
+  
+  return rolePosList;
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function compileLists() {
+  var nameList = compileStuNameList();
+  var roleList = compileRolePosList("Cast Points");
+  var positionList = compileRolePosList("Crew Points");
+  Logger.log[nameList, roleList, positionList];
+  return [nameList, roleList, positionList];
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function addCastCrew(castOrCrewSheet, role, numOfStu, names) {
+  
+  Logger.log(castOrCrewSheet.toString() +"\n"+ role.toString() +"\n"+ numOfStu.toString() +"\n"+ names.toString());
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var listSheet = ss.getSheetByName(castOrCrewSheet);
+  var listSheetRange = listSheet.getDataRange();
+  var sheetData = listSheetRange.getValues();
+  sheetData = sheetData.slice(1, sheetData.length);
+  var nameString = "";
+  var curRng;
+  var curValues;
+  var roleNotPresent = true;
+  
+  for (var i=0; i<names.length; i++) {
+    nameString = nameString + names[i].toString() + ", ";
+  }
+  
+  for (var i=0; i<sheetData.length; i++) {
+    if (role.toLowerCase() == sheetData[i][0].toLowerCase()) {
+      curRng = listSheet.getRange(i+2, 2);
+      curValues = curRng.getValue();
+      if (curValues.length > 0) {
+        curValues += ", ";
+      }
+      curValues = curValues + nameString;
+      curRng.setValue(curValues.slice(0, curValues.length-2));
+      roleNotPresent = false;
+      break;
+    }
+  }
+  
+  if (roleNotPresent) {
+    listSheet.appendRow([role, nameString.slice(0, nameString.length-2)]);
+  }
+  
+  listSheet.getDataRange().setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+  SpreadsheetApp.setActiveSheet(listSheet);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function addRolePosSidebar() {
+  
+  var ui = HtmlService.createHtmlOutputFromFile("addrolepos").setTitle("Add Roles or Positions");
+  SpreadsheetApp.getUi().showSidebar(ui);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function createRemoveStuSidebar() {
+ 
+  var ui = HtmlService.createHtmlOutputFromFile("removestudents").setTitle("Remove Students");
+  SpreadsheetApp.getUi().showSidebar(ui);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function removeStu() {
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function updateAllContactInfo() {
+  updateContactInfo("Cast List", "Cast Info", "Role");
+  updateContactInfo("Crew List", "Crew Info", "Position");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function updateContactInfo(listName, infoName, colName) {
+  
+  var listSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(listName);
+  var infoSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(infoName);
+  var regSheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1pGFH8ap2ufeOtTaBRwRNJYbtWYJ9H7_kr_RfxlsPPtU/edit#gid=2060589657").getActiveSheet();
+  var listData = listSheet.getDataRange().getValues();
+  var regData = regSheet.getDataRange().getValues();
+  var ui = SpreadsheetApp.getUi();
+  
+  listData = listData.slice(1, listData.length);
+  regData = regData.slice(1, regData.length);
+  
+  var row;
+  var role;
+  var nameList;
+  var usedNameList = [];
+  var name;
+  var firstNlast;
+  var notFound = "";
+  
+  infoSheet.getDataRange().clear();
+  infoSheet.appendRow([colName, "Name", "Grade", "Email", "Phone", "T-Shirt Size"])
+  infoSheet.getDataRange().setFontWeight("bold");
+  
+  for (i in listData) {
+    
+    role = listData[i][0].toString();
+    nameList = listData[i][1].toString().split(", ");
+    
+    for (k in nameList) {
+      
+      firstNlast = nameList[k].toString().split(" ");
+      row = findStu(firstNlast[0], firstNlast[1], regData);
+      
+      if (row > -1 && usedNameList.indexOf(nameList[k]) == -1) {
+        
+        usedNameList.push(nameList[k]);
+        infoSheet.appendRow([role, nameList[k], regData[row][4], regData[row][5], regData[row][6], regData[row][11]]);
+        
+      } else if (usedNameList.indexOf(nameList[k]) != -1) {
+      } else {
+        
+        infoSheet.appendRow([role, nameList[k]]);
+        
+      }
+      
+    } 
+  }
+  
+  infoSheet.getDataRange().setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+  SpreadsheetApp.setActiveSheet(SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Cast Info"));
+  return notFound.slice(0, notFound.length-2);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function findStu(firstName, lastName, data) {
+  
+  for (i in data) {
+    if (data[i][1].trim() == firstName.trim() && data[i][2].trim() == lastName.trim()) {   
+      return i;     
+    } 
+  }
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function createEmailSidebar() {
+  
+  var ui = HtmlService.createHtmlOutputFromFile("sendemail").setTitle("Send Email");
+  SpreadsheetApp.getUi().showSidebar(ui);
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function emailList(infoSheet) {
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(infoSheet);
+  var ui = SpreadsheetApp.getUi();
+  
+  var emailList = "";
+  var data = sheet.getDataRange().getValues();
+  data = data.slice(1, data.length);
+  
+  for (i in data) {
+    var emailAddress = data[i][3];
+    emailList = emailList + emailAddress + ", ";
+  }
+  
+  emailList = emailList.slice(0, emailList.length - 2);
+  //Logger.log(emailList);
+  //SpreadsheetApp.getUi().alert("Emails", "This is a list of all the recognized emails:\n\n" + emailList, ui.ButtonSet.OK);
+  return emailList;
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+function sendEmail(infoSheet, subj, msg) {
+  var emails = emailList(infoSheet);
+  GmailApp.sendEmail(emails, subj, msg);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function countSizes() {
+ 
+  var sheetName = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();
+  var ui = SpreadsheetApp.getUi();
+  var size;
+  var s = 0;
+  var m = 0;
+  var l = 0;
+  var xl = 0;
+  var total;
+  var data;
+  
+  if (sheetName.slice(0,4) == "Cast") {
+    data = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Cast Info").getDataRange().getValues();
+  } else if (sheetName.slice(0,4) == "Crew") {
+    data = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Crew Info").getDataRange().getValues();
+  }
+  
+  for (i in data) {
+    
+    size = data[i][5];
+    
+    switch (size) {
+      case "S":
+        s++;
+        break;
+      case "M":
+        m++;
+        break;
+      case "L":
+        l++;
+        break;
+      case "XL":
+        xl++;
+        break;
+    }
+    
+  }
+  
+  total = s + m + l + xl;
+  
+  ui.alert(sheetName.slice(0,4)+" Shirt Sizes", "Small: " + s + "\nMedium: " + m + "\nLarge: " + l + "\nExtra Large: " + xl + "\n\nTotal: " + total, ui.ButtonSet.OK)
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function phoneList() {
+  
+  var sheetName = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();
+  var ui = SpreadsheetApp.getUi();
+  
+  function genPhoneList(sheetName) {
+    
+    var data = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName).getDataRange().getValues();
+    var phoneList = "";
+    
+    data = data.slice(1, data.length);
+    
+    for (i in data) {
+      var phoneNum = data[i][4];
+      if (phoneNum.toString().length > 0) {
+        phoneList = phoneList + phoneNum.toString() + ", ";
+      }
+    }
+    
+    phoneList = phoneList.slice(0, phoneList.length - 2);
+    SpreadsheetApp.getUi().alert(sheetName.slice(0, 4)+" Phone Numbers", "This is a list of all the recognized phone numbers:\n\n" + phoneList, ui.ButtonSet.OK);
+    
+  }
+  
+  genPhoneList("Cast Info");
+  genPhoneList("Crew Info");
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
