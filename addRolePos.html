@@ -32,9 +32,10 @@
     <button id="closeSidebar" onclick="google.script.host.close()">Close</button>
     </div>
     
-  <script>
+    <script>
   
-  function loadOnSuccess(thespDenomsList) {
+    // Load list of Thespian Denominations to client
+    function loadOnSuccess(thespDenomsList) {
     
       var thespDenomsElmnt = document.createElement("p");
       thespDenomsElmnt.setAttribute("id", "thespDenoms");
@@ -44,6 +45,7 @@
       
     }
   
+  
     function loadFunction() {
       google.script.run.withSuccessHandler(loadOnSuccess).compileThespianDenomList();
     }
@@ -52,22 +54,27 @@
       google.script.host.close();
     }
     
+    // Change UI to reflect the addition of acting roles
     function changeToRole(rolPos) {
       rolPos[0].innerHTML = "Number of Roles";
       createBoxes();
     }
   
+    // Change UI to reflect the additon of crew positions
     function changeToPos(rolPos) {
       rolPos[0].innerHTML = "Number of Positions";
       createBoxes();
     }
     
+    // Return whether an acting role or a crew position is being added
     function buttonSelect() {
       
+      // Get the radio buttons corresponding to what type of jobs are being added
       var castButton = document.getElementById("radioCast");
       var crewButton = document.getElementById("radioCrew");
       var checkedButton = "none";
       
+      // Depending on the selected button, set the output
       if (castButton.checked) {
         checkedButton = "role";
       } else if (crewButton.checked) {
@@ -78,69 +85,89 @@
       
     }
     
+    // Generate dropdown menus
     function createBoxes() {
     
+      // Get the number of roles/positions being added and the list of Thespian denominations
       var numOfBoxes = parseInt(document.getElementById("numOfRolePos").value);
       var thespDenomsList = Array.from(document.getElementById("thespDenoms").value);
+      
       var curDenomsList = [];
       var boxName = buttonSelect();
     
+      // Account for whether user passes a non-integer for the number of roles/positions to add
       if (!(Number.isInteger(numOfBoxes))) {
-          numOfBoxes = 0;
+        numOfBoxes = 0;
       }
       
+      // If acting roles are being added
       if (boxName == "role") {
-        for (var i=0; i<thespDenomsList.length; i++) {
+        // Iterate through the Thespian denominations and select which ones are for acting
+        for (var i = 0; i < thespDenomsList.length; i++) {
           if (thespDenomsList[i].name == "Acting") {
             curDenomsList.push(thespDenomsList[i]);
           }
         }
-      } else if (boxName == "position") {
-        for (var i=0; i<thespDenomsList.length; i++) {
+      } 
+      // If crew positions are being added
+      else if (boxName == "position") {
+        // Iterate through the Thespian denominations and select which ones are for acting
+        for (var i = 0; i < thespDenomsList.length; i++) {
           if (thespDenomsList[i].name != "Acting") {
             curDenomsList.push(thespDenomsList[i]);
           }
         }
-      } else {
+      }
+      // If no roles or positions are being added
+      else {
         numOfBoxes = 0;
       }
       
       var boxList = Array.from(document.getElementsByName("rolePosDiv"));
       
+      // Reset dropdown menus
       if (boxList.length > 0) {     
-        for (var i=0; i<boxList.length; i++) {
+        for (var i = 0; i < boxList.length; i++) {
           document.getElementById("rolePosBox").removeChild(boxList[i]);
         }
       }
       
-      for (var i = 0; i<numOfBoxes; i++) {
+      // Generate a number of dropdown menus equivalent to how many roles/positions are being added
+      for (var i = 0; i < numOfBoxes; i++) {
         
+        // Create a division for each role/position
         var curBox = document.createElement("div");
         curBox.classList += "block form-group";
         curBox.setAttribute("name", "rolePosDiv");
-        curBox.setAttribute("id", "rolePosDiv"+i.toString());
+        curBox.setAttribute("id", "rolePosDiv" + i.toString());
       
+        // Create an input field for the name of each role/position
         var curInput = document.createElement("input");
-        curInput.setAttribute("id", "rolePos"+i.toString());
+        curInput.setAttribute("id", "rolePos"+ i.toString());
         curInput.setAttribute("name", "rolePos");
         curInput.setAttribute("type", "text");
         curInput.setAttribute("style", "width: 150px");
         
+        // Create title for role/position division
         var curLabel = document.createElement("label");
-        curLabel.setAttribute("from", "rolePosDiv"+i.toString());
+        curLabel.setAttribute("from", "rolePosDiv" + i.toString());
         curLabel.innerHTML = boxName.charAt(0).toUpperCase() + boxName.slice(1) + " " + (i+1).toString();
         
+        // Create dropdown menu for role/position
         var curSelect = document.createElement("select");
         curSelect.setAttribute("name", "rolePosDrop");
         curSelect.setAttribute("style", "width: 150px");
-        for (var k=0; k<curDenomsList.length; k++) {
-          for (var q=0; q<curDenomsList[k].denoms.length; q++) {
+        // Iterate through the applicable Thespian denoms
+        for (var k = 0; k < curDenomsList.length; k++) {
+          // ITerate through the info for each Thespian denom and set dropdown option to its name
+          for (var q = 0; q < curDenomsList[k].denoms.length; q++) {
             var curOption = document.createElement("option");
             curOption.text = curDenomsList[k].denoms[q][0];
             curSelect.add(curOption);
           }  
         }
         
+        // Add UI elements to sidebar
         curBox.appendChild(curLabel);
         curBox.appendChild(curInput);
         curBox.appendChild(curSelect);
@@ -150,20 +177,24 @@
         
     }
     
+    // Add new roles/positions to show spreadsheet
     function addRolesPositions() {
 
       var numOfRolePos = parseInt(document.getElementById("numOfRolePos").value);
       var roleDrop = Array.from(document.getElementsByName("rolePosDrop"));
       
+      // Returns the 
       function getData(num, dropdown) {
         var curList = [];
-        for (var i=0; i<num; i++) {
-          var curRolePos = document.getElementById("rolePos"+i.toString()).value;
+        // Iterate through dropdown menus
+        for (var i = 0; i < num; i++) {
+          var curRolePos = document.getElementById("rolePos" + i.toString()).value;
           var curSelect = dropdown[i];
           var curOption = curSelect.options[curSelect.selectedIndex].value;
           if (curRolePos.length == 0) {
             curRolePos = curOption;
           }
+          // Push name of role/position and associated Thespian denomination to list of roles/positions to be added
           curList.push([curRolePos, curOption]);
         }
         return curList;
@@ -171,6 +202,7 @@
       
       var rolePosData = getData(numOfRolePos, roleDrop);
       
+      // Add roles/positions to show spreadsheet
       google.script.run.withSuccessHandler(addRolePosSuccess).addRolePos([buttonSelect(), rolePosData]);
       
     }
