@@ -90,7 +90,7 @@
     rolePosDrop.options.length = 0;
     
     // Iterate through roles and add them to dropdown
-    for (var i=0; i<list.length; i++) {
+    for (var i = 0; i < list.length; i++) {
       var curOption = document.createElement("option");
       curOption.text = list[i];
       rolePosDrop.add(curOption);
@@ -110,7 +110,7 @@
     rolePosDrop.options.length = 0;
     
     // Iterate through positions and add them to dropdown menus
-    for (var i=0; i<list.length; i++) {
+    for (var i = 0; i < list.length; i++) {
       var curOption = document.createElement("option");
       curOption.text = list[i];
       rolePosDrop.add(curOption);
@@ -164,7 +164,7 @@
       curSelect.setAttribute("style", "width: 150px");
       
       // Add each student's name to the dropdown menu
-      for (var k=0; k<nameList.length; k++) {
+      for (var k = 0; k < nameList.length; k++) {
         curOption = document.createElement("option");
         curOption.text = nameList[k];
         curSelect.add(curOption);
@@ -186,7 +186,7 @@
       // Create title for student division
       curLabel = document.createElement("LABEL");
       curLabel.setAttribute("from", "stuNameSelect" + i.toString());
-      curLabel.innerHTML = "Student " + (i+1).toString();
+      curLabel.innerHTML = "Student " + (i + 1).toString();
       
       // Append UI elements to sidebar
       curInput.appendChild(curLabel);
@@ -253,7 +253,7 @@
       var test = 1 + numOfStudents;
       
       // Iterate through dropdown menus
-      for (var i=0; i<dropdowns.length; i++) {
+      for (var i = 0; i < dropdowns.length; i++) {
         curDropdown = dropdowns[i];
         curName = curDropdown.options[curDropdown.selectedIndex].value;
         // If student is registered, push their name to list of students being added
