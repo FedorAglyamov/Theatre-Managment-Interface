@@ -47,43 +47,49 @@
   
   <script>
   
+  // Load required information to client
   function loadOnSuccess(list) {
   
+    // Load list of registered student names
     var nmLstElement = document.createElement("p");
     nmLstElement.setAttribute("id", "listOfStuNames");
     nmLstElement.value = list[0];
     nmLstElement.style.display = "none";
     document.body.appendChild(nmLstElement);
     
+    // Load list of acting roles in show
     var roleLstElement = document.createElement("p");
     roleLstElement.setAttribute("id", "roleList");
     roleLstElement.value = list[1];
     roleLstElement.style.display = "none";
     document.body.appendChild(roleLstElement);
     
+    // Load list of crew positions in show
     var posLstElement = document.createElement("p");
     posLstElement.setAttribute("id", "posList");
     posLstElement.value = list[2];
     posLstElement.style.display = "none";
     document.body.appendChild(posLstElement);
     
-    //console.log(nmLstElement.value);
-    console.log(roleLstElement.value);
-    console.log(posLstElement.value);
   }
   
+  // Load function
   function loadFunction() {
     google.script.run.withSuccessHandler(loadOnSuccess).compileLists();
   }
   
+  // Format the sidebar to add students to acting roles
   function changeToRole(rolPos) {
   
+    // Get loaded list of roles
     rolPos[0].innerHTML = "<b>Role</b>";
     var list = Array.from(document.getElementById("roleList").value);
     var rolePosDrop = document.getElementById("rolePos");
     
+    // Reset dropdown menu
     rolePosDrop.options.length = 0;
     
+    // Iterate through roles and add them to dropdown
     for (var i=0; i<list.length; i++) {
       var curOption = document.createElement("option");
       curOption.text = list[i];
@@ -92,14 +98,18 @@
     
   }
   
+  // Format the sidebar to add students to crew positions
   function changeToPos(rolPos) {
   
+    // Get loaded list of positions
     rolPos[0].innerHTML = "<b>Position</b>";
     var list = Array.from(document.getElementById("posList").value);
     var rolePosDrop = document.getElementById("rolePos");
     
+    // Reset dropdown menu
     rolePosDrop.options.length = 0;
     
+    // Iterate through positions and add them to dropdown menus
     for (var i=0; i<list.length; i++) {
       var curOption = document.createElement("option");
       curOption.text = list[i];
@@ -108,14 +118,16 @@
     
   }
   
+  // Create dropdown menus for students being added
   function genStudents() {
     
+    // Get number of students being added to show
     var numOfStudents = parseInt(document.getElementById("numOfStu").value);
-    
     if (!(Number.isInteger(numOfStudents))) {
       numOfStudents = 0;
     }
     
+    // Declaring variables
     var curLabel;
     var curInput;
     var curSelect;
@@ -128,35 +140,42 @@
     
     var studentInputList = Array.from(document.getElementsByName("stuNames"));
     
+    // Reset dropdown menus for students being added
     if (studentInputList.length > 0) {
       for (var i=0; i < studentInputList.length; i++) {
         stuInptBx.removeChild(studentInputList[i]);
       }
     }
-  
+    
+    // Generate a number of dropdown menus equivalent to how many students are being added
     for (var i=0; i<numOfStudents; i++) {
       
+      // Create division for student
       curInput = document.createElement("div");
       curInput.classList += "block form-group";
       curInput.setAttribute("name", "stuNames");
       curInput.setAttribute("id", "studentDiv" + i.toString());
       
+      // Create dropdown menu for student
       curSelect = document.createElement("SELECT");
       curSelect.setAttribute("name", "dropdown");
       curSelect.setAttribute("id", "stuNameSelect" + i.toString());
       curSelect.setAttribute("onchange", "otherOptionCreate(this)");
       curSelect.setAttribute("style", "width: 150px");
       
+      // Add each student's name to the dropdown menu
       for (var k=0; k<nameList.length; k++) {
         curOption = document.createElement("option");
         curOption.text = nameList[k];
         curSelect.add(curOption);
       }
       
+      // Add a "Not Registered" option to dropdown
       curOption = document.createElement("option");
       curOption.text = "Not Registered";
       curSelect.add(curOption);
       
+      // Create input field for user to pass name of "Not Registered" student
       curOther = document.createElement("input");
       curOther.setAttribute("id", "other" + i.toString());
       curOther.setAttribute("name", "otherStudents");
@@ -164,27 +183,28 @@
       curOther.setAttribute("style", "width: 150px");
       curOther.style.display = "none";
       
+      // Create title for student division
       curLabel = document.createElement("LABEL");
       curLabel.setAttribute("from", "stuNameSelect" + i.toString());
       curLabel.innerHTML = "Student " + (i+1).toString();
       
+      // Append UI elements to sidebar
       curInput.appendChild(curLabel);
       curInput.appendChild(curSelect);
       curInput.appendChild(curOther);
-      
       stuInptBx.appendChild(curInput);
       
     }
   
   }
   
+  // Show input field for "Not Registered" Student 
   function otherOptionCreate(curSelect) {
     
     var stuNum = curSelect.id.slice(13, curSelect.id.length);
-    console.log(stuNum);
     
+    // If the currently selected option is "Not Registered" show a relevant input field
     if (curSelect.options[curSelect.selectedIndex].value == "Not Registered") {
-      console.log("Other Option Selected");
       document.getElementById("other" + stuNum).style.display = "block";
     } else {
       document.getElementById("other" + stuNum).style.display = "none";
@@ -193,7 +213,6 @@
   }
   
   function addStudentsOnSuccess() {
-    //window.alert("Students have been added.");
     google.script.run.createCastCrewSidebar();
   }
   
@@ -201,14 +220,17 @@
     window.alert("There was an ERROR! Please try again.");
   }
   
+  // Add students to show spreadsheet
   function addStudents() {
     
+    // Declare vars
     var castOrCrewSheet;
     var curDropdown;
     var curName;
     var curOtherStu;
     var names =[];
     
+    // Get the data passed by user into sidebar
     var castRadio = document.getElementById("radioCast").checked;
     var crewRadio = document.getElementById("radioCrew").checked;
     var roleOrPosElmnt = document.getElementById("rolePos");
@@ -219,6 +241,7 @@
     
     try {
       
+      // Check that students are being added to either an acting role or crew position
       if (castRadio) {
         castOrCrewSheet = "Cast List";
       } else if (crewRadio) {
@@ -229,18 +252,22 @@
       
       var test = 1 + numOfStudents;
       
+      // Iterate through dropdown menus
       for (var i=0; i<dropdowns.length; i++) {
         curDropdown = dropdowns[i];
         curName = curDropdown.options[curDropdown.selectedIndex].value;
+        // If student is registered, push their name to list of students being added
         if (curName != "Not Registered") {
           names.push(curName);
         }
         curOtherStu = others[i];
+        // If other option selected and student name passed, add student name to list of students being added
         if (curOtherStu.style.display != "none") {
           names.push(curOtherStu.value);
         }
       }
       
+      // Add students to show spreadsheet
       google.script.run.withSuccessHandler(addStudentsOnSuccess).withFailureHandler(addStudentsOnFailure).addCastCrew(castOrCrewSheet, roleOrPosSelected, numOfStudents, names);
       
     }
