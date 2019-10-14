@@ -43,18 +43,22 @@
     
     <script>
     
+    // Success handler
     function emailOnSuccess() {
       window.alert("Email sent.");
       google.script.host.close();
     }
     
+    // Send email
     function sendEmail() {
     
+      // Get the information passed by user into sidebar
       var checkboxCast = document.getElementById("checkCast");
       var checkboxCrew = document.getElementById("checkCrew");
       var subj = document.getElementById("subject").value;
       var msg = document.getElementById("emailBody").value;
       
+      // If email is going to be sent to both cast and crew, send it to both, otherwise send it to specified group
       if (checkboxCast.checked && checkboxCrew.checked) {
         google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Cast Info", subj, msg);
         google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Crew Info", subj, msg);
@@ -62,7 +66,9 @@
         google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Cast Info", subj, msg);
       } else if (checkboxCrew.checked) {
         google.script.run.withSuccessHandler(emailOnSuccess).sendEmail("Crew Info", subj, msg);
-      } else {
+      } 
+      // If neither cast or crew has been selected as recipients of email, alert user
+      else {
         window.alert("No recipients were selected.");
       }
       
